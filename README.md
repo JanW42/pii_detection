@@ -6,6 +6,24 @@ Im Fokus steht der Vergleich von zwei bidirektionalen Encoder-basierten Transfor
 - `openai/privacy-filter` (direkte Token-Klassifikation)
 - Presidio-Pipeline (NLP-Encoder + regelbasierte Recognizer/Filter und Thresholding)
 
+## Aktueller Snapshot - new State of the Art
+### `openai/privacy-filter` (`ai4privacy/pii-masking-300k`, validation)
+- Device: `cuda`
+- Torch: `2.6.0+cu124`
+- CUDA Runtime: `12.4`
+- Samples: `8120`
+- Token Precision: `92.33%`
+- Token Recall: `83.44%`
+- Token F1: `87.66%`
+- Span F1: `48.25%`
+
+### Presidio (`ai4privacy/pii-masking-300k`, validation)
+- Samples: `8120`
+- Token Precision: `68.36%`
+- Token Recall: `37.73%`
+- Token F1: `48.62%`
+- Span F1: `40.17%`
+
 ## Was wird gemessen?
 - Token Precision
 - Token Recall
@@ -42,21 +60,4 @@ Presidio:
 python .\benchmark_presidio.py --max-samples 0 --filter-language german --language de
 ```
 
-## Aktueller Snapshot
-### Presidio (`ai4privacy/pii-masking-300k`, validation)
-- Samples: `8120`
-- Token Precision: `68.36%`
-- Token Recall: `37.73%`
-- Token F1: `48.62%`
-- Span F1: `40.17%`
-
-### `openai/privacy-filter` (`ai4privacy/pii-masking-300k`, validation)
-- Device: `cuda`
-- Torch: `2.6.0+cu124`
-- CUDA Runtime: `12.4`
-- Samples: `8120`
-- Token Precision: `92.33%`
-- Token Recall: `83.44%`
-- Token F1: `87.66%`
-- Span F1: `48.25%`
 

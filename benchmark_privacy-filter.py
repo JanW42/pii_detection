@@ -6,6 +6,7 @@ from typing import Iterable
 
 import torch
 from datasets import load_dataset
+from tqdm import tqdm
 from transformers import AutoModelForTokenClassification, AutoTokenizer
 
 
@@ -73,6 +74,11 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--batch-size", type=int, default=8)
     parser.add_argument("--device", choices=["auto", "cpu", "cuda"], default="auto")
+    parser.add_argument(
+        "--require-cu124",
+        action="store_true",
+        help="Bricht ab, wenn CUDA verfuegbar ist, aber nicht Runtime 12.4 (torch.version.cuda != 12.4).",
+    )
     return parser.parse_args()
 
 
@@ -147,6 +153,17 @@ def mark_tokens_as_pii(token_spans: list[tuple[int, int]], pii_spans: list[tuple
 
 def format_pct(value: float) -> str:
     return f"{value * 100:.2f}%"
+
+
+def validate_cuda_runtime(require_cu124: bool) -> None:
+    if not require_cu124:
+        return
+    runtime = torch.version.cuda
+    if runtime != "12.4":
+        raise RuntimeError(
+            "CUDA Runtime 12.4 wurde angefordert (--require-cu124), "
+            f"aber gefunden wurde: {runtime or 'keine CUDA Runtime'}."
+        )
 
 
 def resolve_device(device_arg: str) -> torch.device:
@@ -225,6 +242,13 @@ def main() -> None:
         dataset = dataset.select(range(min(args.max_samples, len(dataset))))
 
     device = resolve_device(args.device)
+    if device.type == "cuda":
+        validate_cuda_runtime(args.require_cu124)
+
+    # Kurzer Torch-Check mit dem explizit gewuenschten Label "divice".
+    print(f"torch divice: {device}")
+    print(f"torch.cuda.is_available: {torch.cuda.is_available()}")
+
     tokenizer = AutoTokenizer.from_pretrained(args.model)
     model = AutoModelForTokenClassification.from_pretrained(args.model).to(device)
     model.eval()
@@ -251,7 +275,7 @@ def main() -> None:
         texts_batch.clear()
         gt_spans_batch.clear()
 
-    for row in dataset:
+    for row in tqdm(dataset, total=len(dataset), desc="Benchmark Samples"):
         text = row.get("source_text") or ""
         if not text:
             continue
@@ -267,6 +291,9 @@ def main() -> None:
 
     print("==== Privacy Filter Benchmark (ai4privacy/pii-masking-300k) ====")
     print(f"Model: {args.model}")
+    print(f"Device: {device}")
+    print(f"Torch: {torch.__version__}")
+    print(f"CUDA runtime (torch.version.cuda): {torch.version.cuda}")
     print(f"Samples: {len(dataset)}")
     print(f"Scope Precision (tokens): {format_pct(token_metrics.precision)}")
     print(f"Recall (tokens):          {format_pct(token_metrics.recall)}")

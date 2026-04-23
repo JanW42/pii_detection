@@ -60,5 +60,3 @@ python .\benchmark_presidio.py --max-samples 0 --filter-language german --langua
 - Token F1: `87.66%`
 - Span F1: `48.25%`
 
-## Hinweis
-`No matching distribution found for torch` bedeutet meist: Python-Version ist zu neu (z. B. `3.14`). Nutze `3.11` oder `3.12`.

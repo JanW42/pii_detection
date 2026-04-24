@@ -1,0 +1,7 @@
+==== Presidio Benchmark (ai4privacy/open-pii-masking-500k-ai4privacy) ====
+Samples: 16485
+Scope Precision (tokens): 86.27%
+Recall (tokens):          59.21%
+F1 (tokens):              70.22%
+F1 (spans):               41.56%
+Confusion Matrix Plot:    ./confusion_privacy_filter_de_all_presidio.png

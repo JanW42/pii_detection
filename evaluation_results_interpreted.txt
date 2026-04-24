@@ -1,0 +1,22 @@
+==== Interpreted Benchmark Evaluation ====
+Dateien: 3
+
+Einzelauswertung:
+- Privacy Filter Benchmark (ai4privacy/open-pii-masking-500k-ai4privacy)
+  Token-F1: 88.01% (stark).
+  Interpretation: eher konservativ (hohe Precision, niedrigere Recall).
+  Span-Gap: groß, exakte Span-Grenzen sind ein Hauptproblem.
+- AI4Privacy PII Benchmark (ai4privacy/open-pii-masking-500k-ai4privacy)
+  Token-F1: 62.99% (ausbaufähig).
+  Interpretation: eher konservativ (hohe Precision, niedrigere Recall).
+  Span-Gap: groß, exakte Span-Grenzen sind ein Hauptproblem.
+- Presidio Benchmark (ai4privacy/open-pii-masking-500k-ai4privacy)
+  Token-F1: 70.22% (solide).
+  Interpretation: eher konservativ (hohe Precision, niedrigere Recall).
+  Span-Gap: groß, exakte Span-Grenzen sind ein Hauptproblem.
+
+Modellvergleich:
+- Bestes Token-F1: Privacy Filter Benchmark (ai4privacy/open-pii-masking-500k-ai4privacy) (88.01%)
+- Beste Token-Precision: AI4Privacy PII Benchmark (ai4privacy/open-pii-masking-500k-ai4privacy) (99.12%)
+- Beste Token-Recall: Privacy Filter Benchmark (ai4privacy/open-pii-masking-500k-ai4privacy) (80.35%)
+- Bestes Span-F1: Presidio Benchmark (ai4privacy/open-pii-masking-500k-ai4privacy) (41.56%)

@@ -9,10 +9,10 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
+import torch
 from datasets import load_dataset
-from presidio_analyzer import AnalyzerEngine
-from presidio_analyzer.nlp_engine import NlpEngineProvider
 from tqdm import tqdm
+from transformers import AutoModelForTokenClassification, AutoTokenizer
 
 
 @dataclass
@@ -69,46 +69,36 @@ class SpanMetrics:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Benchmark Presidio on ai4privacy/open-pii-masking-500k-ai4privacy validations split."
+        description="Benchmark AI4Privacy PII model on ai4privacy/open-pii-masking-500k-ai4privacy validations split."
     )
+    parser.add_argument("--model", default="ai4privacy/llama-ai4privacy-multilingual-categorical-anonymiser-openpii")
     parser.add_argument("--dataset", default="ai4privacy/open-pii-masking-500k-ai4privacy")
     parser.add_argument("--split", default="validations")
-    parser.add_argument("--language", default="de")
-    parser.add_argument("--score-threshold", type=float, default=0.35)
     parser.add_argument("--max-samples", type=int, default=0, help="0 = all samples")
     parser.add_argument(
         "--filter-language",
         default="de",
         help="Filter auf eine Datensatzsprache, z. B. de oder en.",
     )
+    parser.add_argument("--batch-size", type=int, default=8)
+    parser.add_argument("--device", choices=["auto", "cpu", "cuda"], default="auto")
     parser.add_argument(
         "--plot-path",
-        default="benchmark_presidio_confusion_matrix.png",
+        default="benchmark_ai4privacy_confusion_matrix.png",
         help="Dateipfad fuer den gespeicherten Confusion-Matrix-Plot.",
     )
     parser.add_argument(
         "--output-path",
-        default="benchmark_presidio_results.txt",
+        default="benchmark_ai4privacy_results.txt",
         help="Dateipfad fuer den gespeicherten Text-Report der Metriken.",
     )
     return parser.parse_args()
-
-
-def build_analyzer() -> AnalyzerEngine:
-    configuration = {
-        "nlp_engine_name": "spacy",
-        "models": [{"lang_code": "de", "model_name": "de_core_news_lg"}],
-    }
-    provider = NlpEngineProvider(nlp_configuration=configuration)
-    nlp_engine = provider.create_engine()
-    return AnalyzerEngine(nlp_engine=nlp_engine, supported_languages=["de"])
 
 
 def load_validation_dataset(dataset_name: str, split_name: str):
     try:
         return load_dataset(dataset_name, split=split_name)
     except Exception:
-        # Fallback for datasets that keep split info in a "set" column.
         train_ds = load_dataset(dataset_name, split="train")
         if "set" not in train_ds.column_names:
             raise
@@ -252,9 +242,72 @@ def plot_confusion_matrix(metrics: TokenMetrics, output_path: str, title: str) -
     plt.close(fig)
 
 
+def resolve_device(device_arg: str) -> torch.device:
+    if device_arg == "cpu":
+        return torch.device("cpu")
+    if device_arg == "cuda":
+        if not torch.cuda.is_available():
+            raise RuntimeError("CUDA wurde angefordert, ist aber nicht verfuegbar.")
+        return torch.device("cuda")
+    return torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
+def label_is_pii(label: str) -> bool:
+    if not label:
+        return False
+    normalized = label.upper()
+    return normalized != "O"
+
+
+def predict_spans_for_batch(
+    texts: list[str],
+    tokenizer: AutoTokenizer,
+    model: AutoModelForTokenClassification,
+    device: torch.device,
+) -> list[list[tuple[int, int]]]:
+    encoded = tokenizer(
+        texts,
+        return_tensors="pt",
+        padding=True,
+        truncation=True,
+        return_offsets_mapping=True,
+    )
+    offset_mapping = encoded.pop("offset_mapping")
+    inputs = {key: value.to(device) for key, value in encoded.items()}
+
+    with torch.no_grad():
+        logits = model(**inputs).logits
+
+    predicted_ids = logits.argmax(dim=-1).cpu()
+    input_ids = encoded["input_ids"]
+
+    batch_spans: list[list[tuple[int, int]]] = []
+    for sample_idx in range(len(texts)):
+        spans: list[tuple[int, int]] = []
+        token_ids = input_ids[sample_idx]
+        token_offsets = offset_mapping[sample_idx]
+        sample_pred_ids = predicted_ids[sample_idx]
+
+        for token_id, class_id, (start, end) in zip(token_ids, sample_pred_ids, token_offsets):
+            token_id_int = int(token_id.item())
+            if token_id_int in tokenizer.all_special_ids:
+                continue
+
+            start_i = int(start.item())
+            end_i = int(end.item())
+            if end_i <= start_i:
+                continue
+
+            label = model.config.id2label[int(class_id.item())]
+            if label_is_pii(label):
+                spans.append((start_i, end_i))
+
+        batch_spans.append(merge_spans(spans))
+    return batch_spans
+
+
 def main() -> None:
     args = parse_args()
-    analyzer = build_analyzer()
     dataset = load_validation_dataset(args.dataset, args.split)
 
     if args.filter_language and "language" in dataset.column_names:
@@ -264,8 +317,32 @@ def main() -> None:
     if args.max_samples > 0:
         dataset = dataset.select(range(min(args.max_samples, len(dataset))))
 
+    device = resolve_device(args.device)
+    tokenizer = AutoTokenizer.from_pretrained(args.model)
+    model = AutoModelForTokenClassification.from_pretrained(args.model).to(device)
+    model.eval()
+
     token_metrics = TokenMetrics()
     span_metrics = SpanMetrics()
+
+    batch_size = max(1, args.batch_size)
+    texts_batch: list[str] = []
+    gt_spans_batch: list[list[tuple[int, int]]] = []
+
+    def flush_batch() -> None:
+        if not texts_batch:
+            return
+
+        pred_spans_batch = predict_spans_for_batch(texts_batch, tokenizer, model, device)
+        for text, gt_spans, pred_spans in zip(texts_batch, gt_spans_batch, pred_spans_batch):
+            token_spans = extract_token_spans(text)
+            y_true = mark_tokens_as_pii(token_spans, gt_spans)
+            y_pred = mark_tokens_as_pii(token_spans, pred_spans)
+            token_metrics.update(y_true, y_pred)
+            span_metrics.update(set(gt_spans), set(pred_spans))
+
+        texts_batch.clear()
+        gt_spans_batch.clear()
 
     for row in tqdm(dataset, total=len(dataset), desc="Benchmark", unit="sample", dynamic_ncols=True):
         text = row.get("source_text") or ""
@@ -273,22 +350,17 @@ def main() -> None:
             continue
 
         gt_spans = parse_span_labels(row.get("span_labels"))
-        analysis = analyzer.analyze(
-            text=text,
-            language=args.language,
-            score_threshold=args.score_threshold,
-        )
-        pred_spans = merge_spans((result.start, result.end) for result in analysis)
+        texts_batch.append(text)
+        gt_spans_batch.append(gt_spans)
 
-        tokens = extract_token_spans(text)
-        y_true = mark_tokens_as_pii(tokens, gt_spans)
-        y_pred = mark_tokens_as_pii(tokens, pred_spans)
-        token_metrics.update(y_true, y_pred)
+        if len(texts_batch) >= batch_size:
+            flush_batch()
 
-        span_metrics.update(set(gt_spans), set(pred_spans))
+    flush_batch()
 
     report_lines = [
-        "==== Presidio Benchmark (ai4privacy/open-pii-masking-500k-ai4privacy) ====",
+        "==== AI4Privacy PII Benchmark (ai4privacy/open-pii-masking-500k-ai4privacy) ====",
+        f"Model: {args.model}",
         f"Samples: {len(dataset)}",
         f"Scope Precision (tokens): {format_pct(token_metrics.precision)}",
         f"Recall (tokens):          {format_pct(token_metrics.recall)}",
@@ -298,7 +370,7 @@ def main() -> None:
     plot_confusion_matrix(
         token_metrics,
         args.plot_path,
-        "Presidio Token-Level Confusion Matrix",
+        "AI4Privacy Token-Level Confusion Matrix",
     )
     report_lines.append(f"Confusion Matrix Plot:    {args.plot_path}")
 
@@ -310,3 +382,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

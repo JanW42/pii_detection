@@ -69,16 +69,16 @@ class SpanMetrics:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Benchmark openai/privacy-filter on ai4privacy/pii-masking-300k validation split."
+        description="Benchmark openai/privacy-filter on ai4privacy/open-pii-masking-500k-ai4privacy validations split."
     )
     parser.add_argument("--model", default="openai/privacy-filter")
-    parser.add_argument("--dataset", default="ai4privacy/pii-masking-300k")
-    parser.add_argument("--split", default="validation")
+    parser.add_argument("--dataset", default="ai4privacy/open-pii-masking-500k-ai4privacy")
+    parser.add_argument("--split", default="validations")
     parser.add_argument("--max-samples", type=int, default=0, help="0 = all samples")
     parser.add_argument(
         "--filter-language",
-        default="",
-        help="Filter auf eine Datensatzsprache, z. B. english oder german.",
+        default="de",
+        help="Filter auf eine Datensatzsprache, z. B. de oder en.",
     )
     parser.add_argument("--batch-size", type=int, default=8)
     parser.add_argument("--device", choices=["auto", "cpu", "cuda"], default="auto")
@@ -359,7 +359,7 @@ def main() -> None:
     flush_batch()
 
     report_lines = [
-        "==== Privacy Filter Benchmark (ai4privacy/pii-masking-300k) ====",
+        "==== Privacy Filter Benchmark (ai4privacy/open-pii-masking-500k-ai4privacy) ====",
         f"Model: {args.model}",
         f"Samples: {len(dataset)}",
         f"Scope Precision (tokens): {format_pct(token_metrics.precision)}",

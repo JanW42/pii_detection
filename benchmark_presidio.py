@@ -2,8 +2,13 @@ import argparse
 import ast
 import re
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Iterable
 
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+import numpy as np
 from datasets import load_dataset
 from presidio_analyzer import AnalyzerEngine
 from presidio_analyzer.nlp_engine import NlpEngineProvider
@@ -14,6 +19,7 @@ class TokenMetrics:
     tp: int = 0
     fp: int = 0
     fn: int = 0
+    tn: int = 0
 
     def update(self, y_true: list[bool], y_pred: list[bool]) -> None:
         for truth, pred in zip(y_true, y_pred):
@@ -23,6 +29,8 @@ class TokenMetrics:
                 self.fp += 1
             elif truth and not pred:
                 self.fn += 1
+            else:
+                self.tn += 1
 
     @property
     def precision(self) -> float:
@@ -60,7 +68,7 @@ class SpanMetrics:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Benchmark Presidio (en_core_web_trf) on ai4privacy/pii-masking-300k validation split."
+        description="Benchmark Presidio on ai4privacy/pii-masking-300k validation split."
     )
     parser.add_argument("--dataset", default="ai4privacy/pii-masking-300k")
     parser.add_argument("--split", default="validation")
@@ -73,9 +81,14 @@ def parse_args() -> argparse.Namespace:
         help="Filter auf eine Datensatzsprache, z. B. english oder german.",
     )
     parser.add_argument(
-        "--filter-english",
-        action="store_true",
-        help="Filtert auf language == English (empfohlen für en_core_web_trf).",
+        "--plot-path",
+        default="benchmark_presidio_confusion_matrix.png",
+        help="Dateipfad fuer den gespeicherten Confusion-Matrix-Plot.",
+    )
+    parser.add_argument(
+        "--output-path",
+        default="benchmark_presidio_results.txt",
+        help="Dateipfad fuer den gespeicherten Text-Report der Metriken.",
     )
     return parser.parse_args()
 
@@ -164,6 +177,80 @@ def format_pct(value: float) -> str:
     return f"{value * 100:.2f}%"
 
 
+def plot_confusion_matrix(metrics: TokenMetrics, output_path: str, title: str) -> None:
+    counts = np.array(
+        [
+            [metrics.tp, metrics.fn],
+            [metrics.fp, metrics.tn],
+        ],
+        dtype=float,
+    )
+    total = counts.sum() if counts.sum() else 1.0
+    signed = np.array(
+        [
+            [counts[0, 0] / total, -counts[0, 1] / total],
+            [-counts[1, 0] / total, counts[1, 1] / total],
+        ]
+    )
+    max_abs = float(np.max(np.abs(signed))) if np.any(signed) else 1.0
+
+    fig, ax = plt.subplots(figsize=(9, 7), dpi=150)
+    fig.patch.set_facecolor("#f8fafc")
+    ax.set_facecolor("#ffffff")
+
+    heatmap = ax.imshow(
+        signed,
+        cmap="RdYlGn",
+        vmin=-max_abs,
+        vmax=max_abs,
+        interpolation="nearest",
+    )
+
+    labels = np.array([["TP", "FN"], ["FP", "TN"]])
+    for i in range(2):
+        for j in range(2):
+            count = int(counts[i, j])
+            pct = counts[i, j] / total * 100.0
+            ax.text(
+                j,
+                i,
+                f"{labels[i, j]}\n{count:,}\n{pct:.2f}%",
+                ha="center",
+                va="center",
+                fontsize=13,
+                fontweight="bold",
+                color="#0f172a",
+            )
+
+    ax.set_xticks([0, 1])
+    ax.set_xticklabels(["Vorhersage: PII", "Vorhersage: Kein PII"], fontsize=11, color="#0f172a")
+    ax.set_yticks([0, 1])
+    ax.set_yticklabels(["Wahrheit: PII", "Wahrheit: Kein PII"], fontsize=11, color="#0f172a")
+    ax.set_title(
+        f"{title}\nGruen = korrekt, Rot = Fehler (False Positives/False Negatives)",
+        fontsize=14,
+        pad=16,
+        color="#0f172a",
+    )
+
+    for edge in ax.spines.values():
+        edge.set_color("#cbd5e1")
+        edge.set_linewidth(1.2)
+    ax.set_xticks(np.arange(-0.5, 2, 1), minor=True)
+    ax.set_yticks(np.arange(-0.5, 2, 1), minor=True)
+    ax.grid(which="minor", color="#e2e8f0", linestyle="-", linewidth=2)
+    ax.tick_params(which="minor", bottom=False, left=False)
+
+    cbar = fig.colorbar(heatmap, ax=ax, fraction=0.046, pad=0.04)
+    cbar.set_label("Signierte Token-Rate", color="#0f172a")
+    cbar.ax.yaxis.set_tick_params(color="#0f172a")
+    plt.setp(cbar.ax.get_yticklabels(), color="#0f172a")
+
+    fig.tight_layout()
+    fig.savefig(output_path, bbox_inches="tight")
+    plt.close(fig)
+
+
 def main() -> None:
     args = parse_args()
     analyzer = build_analyzer()
@@ -172,10 +259,6 @@ def main() -> None:
     if args.filter_language and "language" in dataset.column_names:
         lang = args.filter_language.strip().lower()
         dataset = dataset.filter(lambda row: str(row.get("language", "")).lower() == lang)
-
-    if args.filter_english and "language" in dataset.column_names:
-        dataset = dataset.filter(lambda row: str(row.get("language", "")).lower() == "english")
-
     if args.max_samples > 0:
         dataset = dataset.select(range(min(args.max_samples, len(dataset))))
 
@@ -202,13 +285,27 @@ def main() -> None:
 
         span_metrics.update(set(gt_spans), set(pred_spans))
 
-    print("==== Presidio Benchmark (ai4privacy/pii-masking-300k) ====")
-    print(f"Samples: {len(dataset)}")
-    print(f"Scope Precision (tokens): {format_pct(token_metrics.precision)}")
-    print(f"Recall (tokens):          {format_pct(token_metrics.recall)}")
-    print(f"F1 (tokens):              {format_pct(token_metrics.f1)}")
-    print(f"F1 (spans):               {format_pct(span_metrics.f1)}")
+    report_lines = [
+        "==== Presidio Benchmark (ai4privacy/pii-masking-300k) ====",
+        f"Samples: {len(dataset)}",
+        f"Scope Precision (tokens): {format_pct(token_metrics.precision)}",
+        f"Recall (tokens):          {format_pct(token_metrics.recall)}",
+        f"F1 (tokens):              {format_pct(token_metrics.f1)}",
+        f"F1 (spans):               {format_pct(span_metrics.f1)}",
+    ]
+    plot_confusion_matrix(
+        token_metrics,
+        args.plot_path,
+        "Presidio Token-Level Confusion Matrix",
+    )
+    report_lines.append(f"Confusion Matrix Plot:    {args.plot_path}")
+
+    report = "\n".join(report_lines)
+    Path(args.output_path).write_text(report + "\n", encoding="utf-8")
+    print(report)
+    print(f"Results file:             {args.output_path}")
 
 
 if __name__ == "__main__":
     main()
+

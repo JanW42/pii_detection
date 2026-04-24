@@ -2,11 +2,15 @@ import argparse
 import ast
 import re
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Iterable
 
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+import numpy as np
 import torch
 from datasets import load_dataset
-from tqdm import tqdm
 from transformers import AutoModelForTokenClassification, AutoTokenizer
 
 
@@ -15,6 +19,7 @@ class TokenMetrics:
     tp: int = 0
     fp: int = 0
     fn: int = 0
+    tn: int = 0
 
     def update(self, y_true: list[bool], y_pred: list[bool]) -> None:
         for truth, pred in zip(y_true, y_pred):
@@ -24,6 +29,8 @@ class TokenMetrics:
                 self.fp += 1
             elif truth and not pred:
                 self.fn += 1
+            else:
+                self.tn += 1
 
     @property
     def precision(self) -> float:
@@ -75,9 +82,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--batch-size", type=int, default=8)
     parser.add_argument("--device", choices=["auto", "cpu", "cuda"], default="auto")
     parser.add_argument(
-        "--require-cu124",
-        action="store_true",
-        help="Bricht ab, wenn CUDA verfuegbar ist, aber nicht Runtime 12.4 (torch.version.cuda != 12.4).",
+        "--plot-path",
+        default="benchmark_privacy_filter_confusion_matrix.png",
+        help="Dateipfad fuer den gespeicherten Confusion-Matrix-Plot.",
+    )
+    parser.add_argument(
+        "--output-path",
+        default="benchmark_privacy_filter_results.txt",
+        help="Dateipfad fuer den gespeicherten Text-Report der Metriken.",
     )
     return parser.parse_args()
 
@@ -155,15 +167,78 @@ def format_pct(value: float) -> str:
     return f"{value * 100:.2f}%"
 
 
-def validate_cuda_runtime(require_cu124: bool) -> None:
-    if not require_cu124:
-        return
-    runtime = torch.version.cuda
-    if runtime != "12.4":
-        raise RuntimeError(
-            "CUDA Runtime 12.4 wurde angefordert (--require-cu124), "
-            f"aber gefunden wurde: {runtime or 'keine CUDA Runtime'}."
-        )
+def plot_confusion_matrix(metrics: TokenMetrics, output_path: str, title: str) -> None:
+    counts = np.array(
+        [
+            [metrics.tp, metrics.fn],
+            [metrics.fp, metrics.tn],
+        ],
+        dtype=float,
+    )
+    total = counts.sum() if counts.sum() else 1.0
+    signed = np.array(
+        [
+            [counts[0, 0] / total, -counts[0, 1] / total],
+            [-counts[1, 0] / total, counts[1, 1] / total],
+        ]
+    )
+    max_abs = float(np.max(np.abs(signed))) if np.any(signed) else 1.0
+
+    fig, ax = plt.subplots(figsize=(9, 7), dpi=150)
+    fig.patch.set_facecolor("#f8fafc")
+    ax.set_facecolor("#ffffff")
+
+    heatmap = ax.imshow(
+        signed,
+        cmap="RdYlGn",
+        vmin=-max_abs,
+        vmax=max_abs,
+        interpolation="nearest",
+    )
+
+    labels = np.array([["TP", "FN"], ["FP", "TN"]])
+    for i in range(2):
+        for j in range(2):
+            count = int(counts[i, j])
+            pct = counts[i, j] / total * 100.0
+            ax.text(
+                j,
+                i,
+                f"{labels[i, j]}\n{count:,}\n{pct:.2f}%",
+                ha="center",
+                va="center",
+                fontsize=13,
+                fontweight="bold",
+                color="#0f172a",
+            )
+
+    ax.set_xticks([0, 1])
+    ax.set_xticklabels(["Vorhersage: PII", "Vorhersage: Kein PII"], fontsize=11, color="#0f172a")
+    ax.set_yticks([0, 1])
+    ax.set_yticklabels(["Wahrheit: PII", "Wahrheit: Kein PII"], fontsize=11, color="#0f172a")
+    ax.set_title(
+        f"{title}\nGruen = korrekt, Rot = Fehler (False Positives/False Negatives)",
+        fontsize=14,
+        pad=16,
+        color="#0f172a",
+    )
+
+    for edge in ax.spines.values():
+        edge.set_color("#cbd5e1")
+        edge.set_linewidth(1.2)
+    ax.set_xticks(np.arange(-0.5, 2, 1), minor=True)
+    ax.set_yticks(np.arange(-0.5, 2, 1), minor=True)
+    ax.grid(which="minor", color="#e2e8f0", linestyle="-", linewidth=2)
+    ax.tick_params(which="minor", bottom=False, left=False)
+
+    cbar = fig.colorbar(heatmap, ax=ax, fraction=0.046, pad=0.04)
+    cbar.set_label("Signierte Token-Rate", color="#0f172a")
+    cbar.ax.yaxis.set_tick_params(color="#0f172a")
+    plt.setp(cbar.ax.get_yticklabels(), color="#0f172a")
+
+    fig.tight_layout()
+    fig.savefig(output_path, bbox_inches="tight")
+    plt.close(fig)
 
 
 def resolve_device(device_arg: str) -> torch.device:
@@ -242,13 +317,6 @@ def main() -> None:
         dataset = dataset.select(range(min(args.max_samples, len(dataset))))
 
     device = resolve_device(args.device)
-    if device.type == "cuda":
-        validate_cuda_runtime(args.require_cu124)
-
-    # Kurzer Torch-Check mit dem explizit gewuenschten Label "divice".
-    print(f"torch divice: {device}")
-    print(f"torch.cuda.is_available: {torch.cuda.is_available()}")
-
     tokenizer = AutoTokenizer.from_pretrained(args.model)
     model = AutoModelForTokenClassification.from_pretrained(args.model).to(device)
     model.eval()
@@ -275,7 +343,7 @@ def main() -> None:
         texts_batch.clear()
         gt_spans_batch.clear()
 
-    for row in tqdm(dataset, total=len(dataset), desc="Benchmark Samples"):
+    for row in dataset:
         text = row.get("source_text") or ""
         if not text:
             continue
@@ -289,16 +357,26 @@ def main() -> None:
 
     flush_batch()
 
-    print("==== Privacy Filter Benchmark (ai4privacy/pii-masking-300k) ====")
-    print(f"Model: {args.model}")
-    print(f"Device: {device}")
-    print(f"Torch: {torch.__version__}")
-    print(f"CUDA runtime (torch.version.cuda): {torch.version.cuda}")
-    print(f"Samples: {len(dataset)}")
-    print(f"Scope Precision (tokens): {format_pct(token_metrics.precision)}")
-    print(f"Recall (tokens):          {format_pct(token_metrics.recall)}")
-    print(f"F1 (tokens):              {format_pct(token_metrics.f1)}")
-    print(f"F1 (spans):               {format_pct(span_metrics.f1)}")
+    report_lines = [
+        "==== Privacy Filter Benchmark (ai4privacy/pii-masking-300k) ====",
+        f"Model: {args.model}",
+        f"Samples: {len(dataset)}",
+        f"Scope Precision (tokens): {format_pct(token_metrics.precision)}",
+        f"Recall (tokens):          {format_pct(token_metrics.recall)}",
+        f"F1 (tokens):              {format_pct(token_metrics.f1)}",
+        f"F1 (spans):               {format_pct(span_metrics.f1)}",
+    ]
+    plot_confusion_matrix(
+        token_metrics,
+        args.plot_path,
+        "Privacy Filter Token-Level Confusion Matrix",
+    )
+    report_lines.append(f"Confusion Matrix Plot:    {args.plot_path}")
+
+    report = "\n".join(report_lines)
+    Path(args.output_path).write_text(report + "\n", encoding="utf-8")
+    print(report)
+    print(f"Results file:             {args.output_path}")
 
 
 if __name__ == "__main__":

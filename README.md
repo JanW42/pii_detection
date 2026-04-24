@@ -45,19 +45,13 @@ python -c "import torch; print(torch.__version__); print(torch.version.cuda); pr
 ```
 
 ## Benchmark ausfuehren
-Privacy-Filter (alle Samples, deutsches Subset):
+Privacy-Filter (alle deutschen Samples, inkl. Report + Plot):
 ```powershell
-python .\benchmark_privacy-filter.py --max-samples 0 --filter-language german
+python .\benchmark_privacy-filter.py --filter-language german --max-samples 0 --output-path .\results_privacy_filter_german_all.txt --plot-path .\confusion_privacy_filter_german_all.png
 ```
 
-Mit erzwungenem CUDA-Check:
+Presidio (alle deutschen Samples, inkl. Report + Plot):
 ```powershell
-python .\benchmark_privacy-filter.py --device cuda --require-cu124 --max-samples 0 --filter-language german
+python .\benchmark_presidio.py --filter-language german --max-samples 0 --output-path .\results_presidio_german_all.txt --plot-path .\confusion_presidio_german_all.png
 ```
-
-Presidio:
-```powershell
-python .\benchmark_presidio.py --max-samples 0 --filter-language german --language de
-```
-
 

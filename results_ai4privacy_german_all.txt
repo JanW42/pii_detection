@@ -1,8 +1,0 @@
-==== AI4Privacy PII Benchmark (ai4privacy/pii-masking-300k) ====
-Model: ai4privacy/llama-ai4privacy-multilingual-categorical-anonymiser-openpii
-Samples: 8120
-Scope Precision (tokens): 92.80%
-Recall (tokens):          56.41%
-F1 (tokens):              70.17%
-F1 (spans):               13.32%
-Confusion Matrix Plot:    .\confusion_ai4privacy_german_all.png

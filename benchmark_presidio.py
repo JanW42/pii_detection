@@ -69,10 +69,10 @@ class SpanMetrics:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Benchmark Presidio on ai4privacy/open-pii-masking-500k-ai4privacy validations split."
+        description="Benchmark Presidio on ai4privacy/open-pii-masking-500k-ai4privacy validation split."
     )
     parser.add_argument("--dataset", default="ai4privacy/open-pii-masking-500k-ai4privacy")
-    parser.add_argument("--split", default="validations")
+    parser.add_argument("--split", default="validation")
     parser.add_argument("--language", default="de")
     parser.add_argument("--score-threshold", type=float, default=0.35)
     parser.add_argument("--max-samples", type=int, default=0, help="0 = all samples")
@@ -126,11 +126,17 @@ def parse_span_labels(raw_span_labels) -> list[tuple[int, int]]:
 
     spans: list[tuple[int, int]] = []
     for item in raw_span_labels:
-        if not isinstance(item, (list, tuple)) or len(item) < 2:
+        if isinstance(item, dict):
+            start, end = item.get("start"), item.get("end")
+        elif isinstance(item, (list, tuple)) and len(item) >= 2:
+            start, end = item[0], item[1]
+        else:
             continue
-        start, end = int(item[0]), int(item[1])
-        if end > start:
-            spans.append((start, end))
+        if start is None or end is None:
+            continue
+        start_i, end_i = int(start), int(end)
+        if end_i > start_i:
+            spans.append((start_i, end_i))
     return merge_spans(spans)
 
 
@@ -172,6 +178,59 @@ def mark_tokens_as_pii(token_spans: list[tuple[int, int]], pii_spans: list[tuple
                 break
             check_index += 1
     return marks
+
+
+def pii_label_is_positive(label: str) -> bool:
+    normalized = str(label).strip().upper()
+    return normalized not in {"", "O", "0", "NONE", "NON_PII", "NON-PII"}
+
+
+def align_mbert_tokens_to_text(text: str, tokens: list[str]) -> list[tuple[int, int] | None]:
+    offsets: list[tuple[int, int] | None] = []
+    cursor = 0
+
+    for token in tokens:
+        tok = str(token)
+        if tok in {"[CLS]", "[SEP]", "[PAD]"}:
+            offsets.append(None)
+            continue
+
+        candidates = [tok]
+        if tok.startswith("##"):
+            candidates.append(tok[2:])
+        if tok.startswith("▁") or tok.startswith("Ġ"):
+            candidates.append(tok[1:])
+
+        matched = None
+        for cand in candidates:
+            if not cand:
+                continue
+            idx = text.find(cand, cursor)
+            if idx == -1:
+                idx = text.find(cand)
+            if idx != -1:
+                matched = (idx, idx + len(cand))
+                cursor = idx + len(cand)
+                break
+        offsets.append(matched)
+
+    return offsets
+
+
+def mark_offsets_as_pii(offsets: list[tuple[int, int] | None], pii_spans: list[tuple[int, int]]) -> list[bool]:
+    marked: list[bool] = []
+    for off in offsets:
+        if off is None:
+            marked.append(False)
+            continue
+        tok_start, tok_end = off
+        is_pii = False
+        for span_start, span_end in pii_spans:
+            if span_end > tok_start and span_start < tok_end:
+                is_pii = True
+                break
+        marked.append(is_pii)
+    return marked
 
 
 def format_pct(value: float) -> str:
@@ -272,7 +331,7 @@ def main() -> None:
         if not text:
             continue
 
-        gt_spans = parse_span_labels(row.get("span_labels"))
+        gt_spans = parse_span_labels(row.get("privacy_mask"))
         analysis = analyzer.analyze(
             text=text,
             language=args.language,
@@ -280,9 +339,16 @@ def main() -> None:
         )
         pred_spans = merge_spans((result.start, result.end) for result in analysis)
 
-        tokens = extract_token_spans(text)
-        y_true = mark_tokens_as_pii(tokens, gt_spans)
-        y_pred = mark_tokens_as_pii(tokens, pred_spans)
+        mbert_tokens = row.get("mbert_tokens")
+        mbert_classes = row.get("mbert_token_classes")
+        if isinstance(mbert_tokens, list) and isinstance(mbert_classes, list) and len(mbert_tokens) == len(mbert_classes):
+            offsets = align_mbert_tokens_to_text(text, mbert_tokens)
+            y_true = [pii_label_is_positive(label) for label in mbert_classes]
+            y_pred = mark_offsets_as_pii(offsets, pred_spans)
+        else:
+            tokens = extract_token_spans(text)
+            y_true = mark_tokens_as_pii(tokens, gt_spans)
+            y_pred = mark_tokens_as_pii(tokens, pred_spans)
         token_metrics.update(y_true, y_pred)
 
         span_metrics.update(set(gt_spans), set(pred_spans))

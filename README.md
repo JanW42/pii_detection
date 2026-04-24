@@ -7,7 +7,7 @@ Im Fokus steht der Vergleich von zwei bidirektionalen Encoder-basierten Transfor
 - Presidio-Pipeline (NLP-Encoder + regelbasierte Recognizer/Filter und Thresholding)
 
 ## Aktueller Snapshot - new State of the Art
-### `openai/privacy-filter` (`ai4privacy/open-pii-masking-500k-ai4privacy`, validations)
+### `openai/privacy-filter` (`ai4privacy/open-pii-masking-500k-ai4privacy`, validation)
 - Device: `cuda`
 - Torch: `2.6.0+cu124`
 - CUDA Runtime: `12.4`
@@ -17,7 +17,7 @@ Im Fokus steht der Vergleich von zwei bidirektionalen Encoder-basierten Transfor
 - Token F1: `87.66%`
 - Span F1: `48.25%`
 
-### Presidio (`ai4privacy/open-pii-masking-500k-ai4privacy`, validations)
+### Presidio (`ai4privacy/open-pii-masking-500k-ai4privacy`, validation)
 - Samples: `8120`
 - Token Precision: `68.36%`
 - Token Recall: `37.73%`
@@ -47,10 +47,20 @@ python -c "import torch; print(torch.__version__); print(torch.version.cuda); pr
 ## Benchmark ausfuehren
 Privacy-Filter (alle `de` Samples, inkl. Report + Plot):
 ```powershell
-python .\benchmark_privacy-filter.py --dataset ai4privacy/open-pii-masking-500k-ai4privacy --split validations --filter-language de --max-samples 0 --output-path .\results_privacy_filter_de_all.txt --plot-path .\confusion_privacy_filter_de_all.png
+python .\benchmark_privacy-filter.py --dataset ai4privacy/open-pii-masking-500k-ai4privacy --split validation --filter-language de --max-samples 0 --output-path .\results_privacy_filter_de_all.txt --plot-path .\confusion_privacy_filter_de_all.png
 ```
 
 Presidio (alle `de` Samples, inkl. Report + Plot):
 ```powershell
-python .\benchmark_presidio.py --dataset ai4privacy/open-pii-masking-500k-ai4privacy --split validations --filter-language de --max-samples 0 --output-path .\results_presidio_de_all.txt --plot-path .\confusion_presidio_de_all.png
+python .\benchmark_presidio.py --dataset ai4privacy/open-pii-masking-500k-ai4privacy --split validation --filter-language de --max-samples 0 --output-path .\results_presidio_de_all.txt --plot-path .\confusion_presidio_de_all.png
+```
+
+AI4Privacy-Modell (alle `de` Samples, inkl. Report + Plot):
+```powershell
+python .\benchmark_ai4privacy.py --dataset ai4privacy/open-pii-masking-500k-ai4privacy --split validation --filter-language de --max-samples 0 --output-path .\results_ai4privacy_de_all.txt --plot-path .\confusion_ai4privacy_de_all.png
+```
+
+Datensatz-Verteilung (Token gesamt / PII-Token, `de`, validation):
+```powershell
+python .\dataset_pii_distribution.py --dataset ai4privacy/open-pii-masking-500k-ai4privacy --split validation --filter-language de --max-samples 0 --output-path .\dataset_pii_distribution_de_validation.txt --plot-path .\dataset_pii_distribution_de_validation.png
 ```

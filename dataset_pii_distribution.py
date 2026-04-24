@@ -17,7 +17,7 @@ def parse_args() -> argparse.Namespace:
         description="Evaluate token distribution (PII vs non-PII) on dataset subsets."
     )
     parser.add_argument("--dataset", default="ai4privacy/open-pii-masking-500k-ai4privacy")
-    parser.add_argument("--split", default="validations")
+    parser.add_argument("--split", default="validation")
     parser.add_argument(
         "--filter-language",
         default="de",
@@ -26,12 +26,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-samples", type=int, default=0, help="0 = all samples")
     parser.add_argument(
         "--plot-path",
-        default="dataset_pii_distribution_de_validations.png",
+        default="dataset_pii_distribution_de_validation.png",
         help="Path for the saved plot.",
     )
     parser.add_argument(
         "--output-path",
-        default="dataset_pii_distribution_de_validations.txt",
+        default="dataset_pii_distribution_de_validation.txt",
         help="Path for the saved text report.",
     )
     return parser.parse_args()
@@ -106,6 +106,11 @@ def mark_tokens_as_pii(token_spans: list[tuple[int, int]], pii_spans: list[tuple
     return marks
 
 
+def pii_label_is_positive(label: str) -> bool:
+    normalized = str(label).strip().upper()
+    return normalized not in {"", "O", "0", "NONE", "NON_PII", "NON-PII"}
+
+
 def plot_distribution(pii_tokens: int, non_pii_tokens: int, output_path: str, title: str) -> None:
     total = max(1, pii_tokens + non_pii_tokens)
     pii_pct = pii_tokens / total * 100.0
@@ -174,9 +179,13 @@ def main() -> None:
             continue
         non_empty_samples += 1
 
-        gt_spans = parse_span_labels(row.get("span_labels"))
-        token_spans = extract_token_spans(text)
-        y_true = mark_tokens_as_pii(token_spans, gt_spans)
+        mbert_classes = row.get("mbert_token_classes")
+        if isinstance(mbert_classes, list) and len(mbert_classes) > 0:
+            y_true = [pii_label_is_positive(label) for label in mbert_classes]
+        else:
+            gt_spans = parse_span_labels(row.get("privacy_mask"))
+            token_spans = extract_token_spans(text)
+            y_true = mark_tokens_as_pii(token_spans, gt_spans)
 
         sample_total = len(y_true)
         sample_pii = int(np.sum(y_true))

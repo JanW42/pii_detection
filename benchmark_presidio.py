@@ -12,6 +12,7 @@ import numpy as np
 from datasets import load_dataset
 from presidio_analyzer import AnalyzerEngine
 from presidio_analyzer.nlp_engine import NlpEngineProvider
+from tqdm import tqdm
 
 
 @dataclass
@@ -265,7 +266,7 @@ def main() -> None:
     token_metrics = TokenMetrics()
     span_metrics = SpanMetrics()
 
-    for row in dataset:
+    for row in tqdm(dataset, total=len(dataset), desc="Benchmark", unit="sample", dynamic_ncols=True):
         text = row.get("source_text") or ""
         if not text:
             continue

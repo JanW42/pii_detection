@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from datasets import load_dataset
+from tqdm import tqdm
 from transformers import AutoModelForTokenClassification, AutoTokenizer
 
 
@@ -343,7 +344,7 @@ def main() -> None:
         texts_batch.clear()
         gt_spans_batch.clear()
 
-    for row in dataset:
+    for row in tqdm(dataset, total=len(dataset), desc="Benchmark", unit="sample", dynamic_ncols=True):
         text = row.get("source_text") or ""
         if not text:
             continue

@@ -17,23 +17,23 @@ Im Fokus steht der Vergleich von zwei bidirektionalen Encoder-basierten Transfor
 |---|---:|---:|---:|---:|
 | `openai/privacy-filter` | 97.27% | 80.35% | 88.01% | 20.68% |
 | `ai4privacy/llama-ai4privacy-multilingual-categorical-anonymiser-openpii` | 99.12% | 46.16% | 62.99% | 5.21% |
-| Presidio | 86.27% | 59.21% | 70.22% | 41.56% |
+| `Presidio` | 86.27% | 59.21% | 70.22% | 41.56% |
 
 ## Plots
 Privacy-Filter:
-![Privacy Filter Confusion Matrix](./confusion_privacy_filter_de_all.png)
+![Privacy Filter Confusion Matrix](./src/confusion_privacy_filter_de_all.png)
 
 AI4Privacy:
-![AI4Privacy Confusion Matrix](./confusion_privacy_filter_de_all_ai4privacy.png)
+![AI4Privacy Confusion Matrix](./src/confusion_privacy_filter_de_all_ai4privacy.png)
 
 Presidio:
-![Presidio Confusion Matrix](./confusion_privacy_filter_de_all_presidio.png)
+![Presidio Confusion Matrix](./src/confusion_privacy_filter_de_all_presidio.png)
 
 ## Was wird gemessen?
-- Token Precision
-- Token Recall
-- Token F1
-- Span F1 (exakter Match)
+- Token Precision - Präzision der identifizierten sensiblen Tokens
+- Token Recall - Genauigkeit, Trefferquote von sensiblen Tokens
+- Token F1 - Maß für die Vorhersageleistung. Er wird aus Präzision und Trefferquote des Tests berechnet. 
+- F1 (spans) - korrekt zusammenhängende Tokens insgesamt korrekt klassifiziert
 
 ## Setup (kurz)
 ```powershell

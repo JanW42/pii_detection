@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "C:/Users/jan.wobker/Desktop/pii_detection/venv/Scripts/python.exe",
+    "-m",
+    "ipykernel_launcher",
+    "-f",
+    "{connection_file}"
+  ],
+  "display_name": "Python (pii_detection venv)",
+  "language": "python",
+  "metadata": {
+    "debugger": true
+  }
+}

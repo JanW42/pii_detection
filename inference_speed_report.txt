@@ -1,0 +1,15 @@
+==== Inference Speed Report ====
+Model:                    openai/privacy-filter
+Dataset:                  ai4privacy/open-pii-masking-500k-ai4privacy
+Split / Language:         validation / de
+Sample target:            1000 (seed=42)
+Warmup skipped:           10
+Measured samples:         990
+Avg token length:         29.9
+Mean latency:             216.04 ms
+Median latency:           212.15 ms
+P90 latency:              297.82 ms
+P95 latency:              321.26 ms
+Throughput (wall clock):  4.51 samples/s
+Min / Max latency:        66.40 / 472.64 ms
+PyTorch threads:          4

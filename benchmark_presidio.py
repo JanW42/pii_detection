@@ -94,14 +94,24 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def build_analyzer() -> AnalyzerEngine:
+def build_analyzer(language: str) -> AnalyzerEngine:
+    spacy_models = {
+        "de": "de_core_news_lg",
+        "en": "en_core_web_sm",
+        "fr": "fr_core_news_sm",
+    }
+    model_name = spacy_models.get(language)
+    if model_name is None:
+        supported = ", ".join(sorted(spacy_models))
+        raise ValueError(f"Unsupported language '{language}'. Supported languages: {supported}.")
+
     configuration = {
         "nlp_engine_name": "spacy",
-        "models": [{"lang_code": "de", "model_name": "de_core_news_lg"}],
+        "models": [{"lang_code": language, "model_name": model_name}],
     }
     provider = NlpEngineProvider(nlp_configuration=configuration)
     nlp_engine = provider.create_engine()
-    return AnalyzerEngine(nlp_engine=nlp_engine, supported_languages=["de"])
+    return AnalyzerEngine(nlp_engine=nlp_engine, supported_languages=[language])
 
 
 def load_validation_dataset(dataset_name: str, split_name: str):
@@ -313,7 +323,7 @@ def plot_confusion_matrix(metrics: TokenMetrics, output_path: str, title: str) -
 
 def main() -> None:
     args = parse_args()
-    analyzer = build_analyzer()
+    analyzer = build_analyzer(args.language)
     dataset = load_validation_dataset(args.dataset, args.split)
 
     if args.filter_language and "language" in dataset.column_names:

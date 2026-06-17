@@ -76,23 +76,37 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--split", default="validation")
     parser.add_argument("--max-samples", type=int, default=0, help="0 = all samples")
     parser.add_argument(
+        "--language",
+        choices=["de", "en", "fr"],
+        default=None,
+        help="Sprache fuer den Datensatzfilter und die Ausgabedateien.",
+    )
+    parser.add_argument(
         "--filter-language",
-        default="de",
+        default=None,
         help="Filter auf eine Datensatzsprache, z. B. de oder en.",
     )
     parser.add_argument("--batch-size", type=int, default=8)
     parser.add_argument("--device", choices=["auto", "cpu", "cuda"], default="auto")
     parser.add_argument(
         "--plot-path",
-        default="benchmark_privacy_filter_confusion_matrix.png",
+        default=None,
         help="Dateipfad fuer den gespeicherten Confusion-Matrix-Plot.",
     )
     parser.add_argument(
         "--output-path",
-        default="benchmark_privacy_filter_results.txt",
+        default=None,
         help="Dateipfad fuer den gespeicherten Text-Report der Metriken.",
     )
-    return parser.parse_args()
+    args = parser.parse_args()
+    language = (args.language or args.filter_language or "de").strip().lower()
+    args.language = language
+    args.filter_language = language
+    if args.plot_path is None:
+        args.plot_path = f"benchmark_privacy_filter_confusion_matrix_{language}.png"
+    if args.output_path is None:
+        args.output_path = f"benchmark_privacy_filter_results_{language}.txt"
+    return args
 
 
 def load_validation_dataset(dataset_name: str, split_name: str):
@@ -431,6 +445,7 @@ def main() -> None:
     report_lines = [
         "==== Privacy Filter Benchmark (ai4privacy/open-pii-masking-500k-ai4privacy) ====",
         f"Model: {args.model}",
+        f"Language: {args.language}",
         f"Samples: {len(dataset)}",
         f"Scope Precision (tokens): {format_pct(token_metrics.precision)}",
         f"Recall (tokens):          {format_pct(token_metrics.recall)}",

@@ -1,0 +1,9 @@
+==== Privacy Filter Benchmark (ai4privacy/open-pii-masking-500k-ai4privacy) ====
+Model: openai/privacy-filter
+Runtime: torch
+Samples: 100
+Scope Precision (tokens): 99.29%
+Recall (tokens):          77.24%
+F1 (tokens):              86.89%
+F1 (spans):               20.59%
+Confusion Matrix Plot:    benchmark_privacy_filter_confusion_matrix.png

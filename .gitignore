@@ -1,1 +1,3 @@
 /venv
+/varios-ai-filter/onnx/*.onnx
+/varios-ai-filter/onnx/*.onnx_data*

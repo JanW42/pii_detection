@@ -52,17 +52,17 @@ python -c "import torch; print(torch.__version__); print(torch.version.cuda); pr
 ## Benchmark ausfuehren
 Privacy-Filter (alle `de` Samples, inkl. Report + Plot):
 ```powershell
-python .\benchmark_privacy-filter.py --dataset ai4privacy/open-pii-masking-500k-ai4privacy --split validation --filter-language de --max-samples 0 --output-path .\results_privacy_filter_de_all.txt --plot-path .\confusion_privacy_filter_de_all.png
+python .\benchmark_privacy-filter.py --dataset ai4privacy/open-pii-masking-500k-ai4privacy --split validation --language de --max-samples 0
 ```
 
 Presidio (alle `de` Samples, inkl. Report + Plot):
 ```powershell
-python .\benchmark_presidio.py --dataset ai4privacy/open-pii-masking-500k-ai4privacy --split validation --filter-language de --max-samples 0 --output-path .\results_privacy_filter_de_all_presidio.txt --plot-path .\confusion_privacy_filter_de_all_presidio.png
+python .\benchmark_presidio.py --dataset ai4privacy/open-pii-masking-500k-ai4privacy --split validation --language de --filter-language de --max-samples 0 --output-path .\benchmark_presidio_results_de.txt --plot-path .\benchmark_presidio_confusion_matrix_de.png
 ```
 
 AI4Privacy-Modell (alle `de` Samples, inkl. Report + Plot):
 ```powershell
-python .\benchmark_ai4privacy.py --dataset ai4privacy/open-pii-masking-500k-ai4privacy --split validation --filter-language de --max-samples 0 --output-path .\results_privacy_filter_de_all_ai4privacy.txt --plot-path .\confusion_privacy_filter_de_all_ai4privacy.png
+python .\benchmark_ai4privacy.py --dataset ai4privacy/open-pii-masking-500k-ai4privacy --split validation --language de --max-samples 0
 ```
 
 Datensatz-Verteilung (Token gesamt / PII-Token, `de`, validation):
@@ -72,5 +72,5 @@ python .\dataset_pii_distribution.py --dataset ai4privacy/open-pii-masking-500k-
 
 Interpretierte Gesamtauswertung aus allen Result-Dateien:
 ```powershell
-python .\evaluate_results.py --inputs .\results_privacy_filter_de_all.txt .\results_privacy_filter_de_all_ai4privacy.txt .\results_privacy_filter_de_all_presidio.txt --output-path .\evaluation_results_interpreted.txt
+python .\evaluate_results.py --inputs .\benchmark_privacy_filter_results_de.txt .\benchmark_ai4privacy_results_de.txt .\benchmark_presidio_results_de.txt --output-path .\evaluation_results_interpreted.txt
 ```

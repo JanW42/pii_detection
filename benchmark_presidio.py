@@ -72,6 +72,11 @@ def parse_args() -> argparse.Namespace:
         description="Benchmark Presidio on ai4privacy/open-pii-masking-500k-ai4privacy validation split."
     )
     parser.add_argument("--dataset", default="ai4privacy/open-pii-masking-500k-ai4privacy")
+    parser.add_argument(
+        "--dataset-config",
+        default=None,
+        help="Optionale Dataset-Config, z. B. sentences fuer piimb/pii-masking-benchmark.",
+    )
     parser.add_argument("--split", default="validation")
     parser.add_argument(
         "--language",
@@ -97,6 +102,8 @@ def parse_args() -> argparse.Namespace:
         help="Dateipfad fuer den gespeicherten Text-Report der Metriken.",
     )
     args = parser.parse_args()
+    if args.dataset_config == "sentence":
+        args.dataset_config = "sentences"
     language = (args.language or args.filter_language or "de").strip().lower()
     args.language = language
     args.filter_language = language
@@ -128,12 +135,17 @@ def build_analyzer(language: str) -> AnalyzerEngine:
     return AnalyzerEngine(nlp_engine=nlp_engine, supported_languages=[language])
 
 
-def load_validation_dataset(dataset_name: str, split_name: str):
+def load_validation_dataset(dataset_name: str, split_name: str, dataset_config: str | None = None):
     try:
+        if dataset_config:
+            return load_dataset(dataset_name, dataset_config, split=split_name)
         return load_dataset(dataset_name, split=split_name)
     except Exception:
         # Fallback for datasets that keep split info in a "set" column.
-        train_ds = load_dataset(dataset_name, split="train")
+        if dataset_config:
+            train_ds = load_dataset(dataset_name, dataset_config, split="train")
+        else:
+            train_ds = load_dataset(dataset_name, split="train")
         if "set" not in train_ds.column_names:
             raise
         filtered = train_ds.filter(lambda row: str(row.get("set", "")).lower() == split_name.lower())
@@ -162,6 +174,22 @@ def parse_span_labels(raw_span_labels) -> list[tuple[int, int]]:
         if end_i > start_i:
             spans.append((start_i, end_i))
     return merge_spans(spans)
+
+
+def get_text(row: dict) -> str:
+    for key in ("source_text", "text", "raw_text"):
+        value = row.get(key)
+        if isinstance(value, str) and value:
+            return value
+    return ""
+
+
+def get_ground_truth_spans(row: dict) -> list[tuple[int, int]]:
+    if "privacy_mask" in row:
+        return parse_span_labels(row.get("privacy_mask"))
+    if "entities" in row:
+        return parse_span_labels(row.get("entities"))
+    return []
 
 
 def merge_spans(spans: Iterable[tuple[int, int]]) -> list[tuple[int, int]]:
@@ -341,7 +369,7 @@ def plot_confusion_matrix(metrics: TokenMetrics, output_path: str, title: str) -
 def main() -> None:
     args = parse_args()
     analyzer = build_analyzer(args.language)
-    dataset = load_validation_dataset(args.dataset, args.split)
+    dataset = load_validation_dataset(args.dataset, args.split, args.dataset_config)
 
     if args.filter_language and "language" in dataset.column_names:
         lang = args.filter_language.strip().lower()
@@ -356,11 +384,11 @@ def main() -> None:
     span_metrics = SpanMetrics()
 
     for row in tqdm(dataset, total=len(dataset), desc="Benchmark", unit="sample", dynamic_ncols=True):
-        text = row.get("source_text") or ""
+        text = get_text(row)
         if not text:
             continue
 
-        gt_spans = parse_span_labels(row.get("privacy_mask"))
+        gt_spans = get_ground_truth_spans(row)
         analysis = analyzer.analyze(
             text=text,
             language=args.language,
@@ -383,7 +411,10 @@ def main() -> None:
         span_metrics.update(set(gt_spans), set(pred_spans))
 
     report_lines = [
-        "==== Presidio Benchmark (ai4privacy/open-pii-masking-500k-ai4privacy) ====",
+        "==== Presidio Benchmark ====",
+        f"Dataset: {args.dataset}",
+        f"Dataset config: {args.dataset_config or 'default'}",
+        f"Split: {args.split}",
         f"Language: {args.language}",
         f"Samples: {len(dataset)}",
         f"Scope Precision (tokens): {format_pct(token_metrics.precision)}",

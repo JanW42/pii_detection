@@ -1,8 +1,11 @@
-==== Presidio Benchmark (ai4privacy/open-pii-masking-500k-ai4privacy) ====
+==== Presidio Benchmark ====
+Dataset: piimb/pii-masking-benchmark
+Dataset config: sentences
+Split: test
 Language: en
-Samples: 30160
-Scope Precision (tokens): 91.12%
-Recall (tokens):          68.80%
-F1 (tokens):              78.40%
-F1 (spans):               52.67%
+Samples: 122546
+Scope Precision (tokens): 72.76%
+Recall (tokens):          61.76%
+F1 (tokens):              66.81%
+F1 (spans):               48.96%
 Confusion Matrix Plot:    benchmark_presidio_confusion_matrix_en.png

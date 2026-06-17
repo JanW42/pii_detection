@@ -57,7 +57,7 @@ python .\benchmark_privacy-filter.py --dataset ai4privacy/open-pii-masking-500k-
 
 Presidio (alle `de` Samples, inkl. Report + Plot):
 ```powershell
-python .\benchmark_presidio.py --dataset ai4privacy/open-pii-masking-500k-ai4privacy --split validation --language de --filter-language de --max-samples 0 --output-path .\benchmark_presidio_results_de.txt --plot-path .\benchmark_presidio_confusion_matrix_de.png
+python .\benchmark_presidio.py --dataset ai4privacy/open-pii-masking-500k-ai4privacy --split validation --language de --max-samples 0
 ```
 
 AI4Privacy-Modell (alle `de` Samples, inkl. Report + Plot):

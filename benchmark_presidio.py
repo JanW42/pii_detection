@@ -73,37 +73,51 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--dataset", default="ai4privacy/open-pii-masking-500k-ai4privacy")
     parser.add_argument("--split", default="validation")
-    parser.add_argument("--language", default="de")
+    parser.add_argument(
+        "--language",
+        choices=["de", "en", "fr"],
+        default=None,
+        help="Sprache fuer Presidio, den Datensatzfilter und die Ausgabedateien.",
+    )
     parser.add_argument("--score-threshold", type=float, default=0.35)
     parser.add_argument("--max-samples", type=int, default=0, help="0 = all samples")
     parser.add_argument(
         "--filter-language",
-        default="de",
+        default=None,
         help="Filter auf eine Datensatzsprache, z. B. de oder en.",
     )
     parser.add_argument(
         "--plot-path",
-        default="benchmark_presidio_confusion_matrix.png",
+        default=None,
         help="Dateipfad fuer den gespeicherten Confusion-Matrix-Plot.",
     )
     parser.add_argument(
         "--output-path",
-        default="benchmark_presidio_results.txt",
+        default=None,
         help="Dateipfad fuer den gespeicherten Text-Report der Metriken.",
     )
-    return parser.parse_args()
+    args = parser.parse_args()
+    language = (args.language or args.filter_language or "de").strip().lower()
+    args.language = language
+    args.filter_language = language
+    if args.plot_path is None:
+        args.plot_path = f"benchmark_presidio_confusion_matrix_{language}.png"
+    if args.output_path is None:
+        args.output_path = f"benchmark_presidio_results_{language}.txt"
+    return args
 
 
 def build_analyzer(language: str) -> AnalyzerEngine:
     spacy_models = {
         "de": "de_core_news_lg",
-        "en": "en_core_web_sm",
-        "fr": "fr_core_news_sm",
+        "en": "en_core_web_lg",
+        "fr": "fr_core_news_lg",
     }
     model_name = spacy_models.get(language)
     if model_name is None:
         supported = ", ".join(sorted(spacy_models))
         raise ValueError(f"Unsupported language '{language}'. Supported languages: {supported}.")
+    print(f"Using spaCy model for language '{language}': {model_name}")
 
     configuration = {
         "nlp_engine_name": "spacy",
@@ -248,6 +262,9 @@ def format_pct(value: float) -> str:
 
 
 def plot_confusion_matrix(metrics: TokenMetrics, output_path: str, title: str) -> None:
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+
     counts = np.array(
         [
             [metrics.tp, metrics.fn],
@@ -317,7 +334,7 @@ def plot_confusion_matrix(metrics: TokenMetrics, output_path: str, title: str) -
     plt.setp(cbar.ax.get_yticklabels(), color="#0f172a")
 
     fig.tight_layout()
-    fig.savefig(output_path, bbox_inches="tight")
+    fig.savefig(output, bbox_inches="tight")
     plt.close(fig)
 
 
@@ -329,9 +346,11 @@ def main() -> None:
     if args.filter_language and "language" in dataset.column_names:
         lang = args.filter_language.strip().lower()
         dataset = dataset.filter(lambda row: str(row.get("language", "")).lower() == lang)
+        print(f"Filtered dataset language: {lang}")
 
     if args.max_samples > 0:
         dataset = dataset.select(range(min(args.max_samples, len(dataset))))
+    print(f"Samples after filtering: {len(dataset)}")
 
     token_metrics = TokenMetrics()
     span_metrics = SpanMetrics()
@@ -365,6 +384,7 @@ def main() -> None:
 
     report_lines = [
         "==== Presidio Benchmark (ai4privacy/open-pii-masking-500k-ai4privacy) ====",
+        f"Language: {args.language}",
         f"Samples: {len(dataset)}",
         f"Scope Precision (tokens): {format_pct(token_metrics.precision)}",
         f"Recall (tokens):          {format_pct(token_metrics.recall)}",

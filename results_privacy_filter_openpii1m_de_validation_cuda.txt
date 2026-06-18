@@ -1,0 +1,12 @@
+==== Privacy Filter Benchmark ====
+Model: openai/privacy-filter
+Dataset: ai4privacy/pii-masking-openpii-1m
+Dataset config: default
+Split: validation
+Language: de
+Samples: 23926
+Scope Precision (tokens): 98.09%
+Recall (tokens):          88.16%
+F1 (tokens):              92.86%
+F1 (spans):               30.93%
+Confusion Matrix Plot:    .\confusion_privacy_filter_openpii1m_de_validation_cuda.png

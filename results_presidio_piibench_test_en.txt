@@ -1,0 +1,11 @@
+==== Presidio Benchmark ====
+Dataset: Pritesh-2711/pii-bench
+Dataset config: default
+Split: test
+Language: en
+Samples: 100002
+Scope Precision (tokens): 34.67%
+Recall (tokens):          48.80%
+F1 (tokens):              40.54%
+F1 (spans):               21.66%
+Confusion Matrix Plot:    .\confusion_presidio_piibench_test_en.png

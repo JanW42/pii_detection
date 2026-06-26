@@ -22,6 +22,7 @@ class TokenMetrics:
     fn: int = 0
     tn: int = 0
 
+    # Hier wird Threadsave in der Datenklasse die Kennzahlen aufaddiert F1 Racall FP FN etc.
     def update(self, y_true: list[bool], y_pred: list[bool]) -> None:
         for truth, pred in zip(y_true, y_pred):
             if pred and truth:
@@ -32,7 +33,8 @@ class TokenMetrics:
                 self.fn += 1
             else:
                 self.tn += 1
-
+                
+    # Decorator damit nur lesen erlaubt. setter fehlt also kein schreiben in die Variablen möglich
     @property
     def precision(self) -> float:
         denom = self.tp + self.fp
@@ -56,6 +58,7 @@ class SpanMetrics:
     fp: int = 0
     fn: int = 0
 
+    #Hier die Aufzählung der Kennzahlen für F1 Spans
     def update(self, truth_spans: set[tuple[int, int]], pred_spans: set[tuple[int, int]]) -> None:
         self.tp += len(truth_spans & pred_spans)
         self.fp += len(pred_spans - truth_spans)
@@ -83,7 +86,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--language",
         choices=["de", "en", "fr"],
-        default=None,
+        default="de",
         help="Sprache fuer den Datensatzfilter und die Ausgabedateien.",
     )
     parser.add_argument(
@@ -115,7 +118,7 @@ def parse_args() -> argparse.Namespace:
         args.output_path = f"benchmark_privacy_filter_results_{language}.txt"
     return args
 
-
+#Datensatz laden (validation)
 def load_validation_dataset(dataset_name: str, split_name: str, dataset_config: str | None = None):
     try:
         if dataset_config:
@@ -342,7 +345,7 @@ def plot_confusion_matrix(metrics: TokenMetrics, output_path: str, title: str) -
     fig.savefig(output_path, bbox_inches="tight")
     plt.close(fig)
 
-
+# Device cpu oder gpu
 def resolve_device(device_arg: str) -> torch.device:
     if device_arg == "cpu":
         return torch.device("cpu")
@@ -431,6 +434,7 @@ def main() -> None:
     texts_batch: list[str] = []
     gt_spans_batch: list[list[tuple[int, int]]] = []
 
+    # Herzstück. Hier werden die batches gepackt und die Vorhersagen angestoßen
     def flush_batch() -> None:
         if not texts_batch:
             return
@@ -465,6 +469,7 @@ def main() -> None:
         texts_batch.append(text)
         gt_spans_batch.append(gt_spans)
 
+        # Hier wird geguckt ob batch fertig für verarbeitung oder noch mehr Einträge rein
         if len(texts_batch) >= batch_size:
             flush_batch()
 

@@ -1,0 +1,25 @@
+==== Privacy Filter: Strict Typed Entity-Level Benchmark ====
+Model:                       openai/privacy-filter
+Runtime:                     onnx-int8
+Dataset / split:             ai4privacy/pii-masking-openpii-1m / validation
+Language filter:             de
+Rows / non-empty rows:       23,926 / 23,926
+Rows with scored entities:   22,944
+Matching:                    exact character boundaries + identical mapped entity type
+Micro precision / recall / F1: 2.83% / 10.72% / 4.47%
+Macro F1 (2 types with reference support): 10.39%
+
+Per entity type (strict):
+entity_type       support      TP      FP      FN   precision    recall        F1
+CREDIT_CARD              0       0  23,410       0      0.00%     0.00%     0.00%
+CRYPTO                   0       0      74       0      0.00%     0.00%     0.00%
+EMAIL_ADDRESS       12,046   2,444   9,656   9,602     20.20%    20.29%    20.24%
+IBAN_CODE                0       0       0       0      0.00%     0.00%     0.00%
+IP_ADDRESS               0       0       0       0      0.00%     0.00%     0.00%
+LOCATION            11,507      81  18,688  11,426      0.43%     0.70%     0.54%
+NRP                      0       0       0       0      0.00%     0.00%     0.00%
+PERSON                   0       0  22,268       0      0.00%     0.00%     0.00%
+PHONE_NUMBER             0       0  12,710       0      0.00%     0.00%     0.00%
+
+Unsupported reference labels (not scored): AGE=8305, BUILDINGNUM=10052, CREDITCARDNUMBER=46637, DATE=110670, DRIVERLICENSENUM=36945, GENDER=15507, GIVENNAME=58666, IDCARDNUM=24084, PASSPORTNUM=17722, SEX=7119, SOCIALNUM=31074, STREET=31115, SURNAME=64342, TAXNUM=29340, TELEPHONENUM=67049, TITLE=13503, ZIPCODE=14397
+Unsupported model labels (not scored):     PRIVATE_DATE=145011, PRIVATE_URL=1698

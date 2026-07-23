@@ -1,0 +1,168 @@
+# Entity-Level-Benchmark zur PII-Erkennung
+
+## Kurzfassung
+
+Dieser Benchmark vergleicht `openai/privacy-filter` (ONNX INT8 auf CPU) mit Microsoft Presidio, das den spaCy-Stack `de_core_news_lg` verwendet. Beide Systeme wurden auf dem deutschsprachigen Validierungsteil von `ai4privacy/pii-masking-openpii-1m` geprüft. Die Referenzspans stammen unmittelbar aus dem Feld `privacy_mask`; sie werden also nicht aus Tokenpositionen rekonstruiert.
+
+Unter der implementierten, typgleichen Überlappungsbewertung erreicht `openai/privacy-filter` einen Micro-F1 von **86,98 %** und einen Macro-F1 von **88,47 %**. Presidio erreicht **60,89 %** bzw. **57,43 %**. Der Vorsprung beruht vor allem auf deutlich besserer Erkennung von Kontonummern, Datumsangaben, Adressen und Telefonnummern. Bei E-Mail-Adressen liegen beide Systeme praktisch gleichauf.
+
+Die Werte sind eine belastbare Messung der **PII-Abdeckung bei Spanüberlappung**, jedoch keine strenge One-to-one-Spanbewertung: Ein erkannter, typgleicher Span kann mehrere annotierte Teilspans abdecken. Die Kennzahlen sollten daher nicht als Nachweis einer vollständig exakten Grenzenerkennung gelesen werden.
+
+---
+
+## Ziel und Datenbasis
+
+Ziel ist ein fairer Vergleich der PII-Erkennung auf Entitätsebene. Verarbeitet wurden **23.926** deutschsprachige Einträge des Splits `validation` von `ai4privacy/pii-masking-openpii-1m`; alle Einträge enthalten Text, bei Presidio sind **23.630** Einträge auswertbar, weil mindestens eine bewertete Referenz oder Vorhersage vorliegt.
+
+Verglichen wurden:
+
+| System | Konfiguration |
+| --- | --- |
+| `openai/privacy-filter` | ONNX INT8, CPU, Batchgröße 8 |
+| Microsoft Presidio | spaCy-NLP-Engine mit `de_core_news_lg`, Score-Schwelle 0,35 |
+
+Die ONNX-INT8-Ausführung wurde zusätzlich gegen die unquantisierte PyTorch-Ausführung auf GPU geprüft. Dabei zeigte sich kein signifikanter Leistungsabfall bei den Erkennungsmetriken. Die Ergebnisse sind damit nicht nur für die konkrete CPU-Laufzeit relevant, sondern bilden auch die Modellqualität unabhängig von dieser Quantisierung angemessen ab.
+
+Die Referenzlabels werden auf die acht Klassen des Privacy Filters abgebildet. Die sechs Klassen mit Referenzvorkommen sind `ACCOUNT_NUMBER`, `PRIVATE_ADDRESS`, `PRIVATE_DATE`, `PRIVATE_EMAIL`, `PRIVATE_PERSON` und `PRIVATE_PHONE`. `PRIVATE_URL` und `SECRET` sind zwar Teil der Vergleichstaxonomie, haben in diesem Datensatzteil jedoch Support 0 und fließen folglich nicht in den Macro-F1 ein.
+
+Nicht bewertbare Referenzklassen werden bewusst ausgeschlossen: `AGE` (8.304 Vorkommen), `DRIVERLICENSENUM` (4.486), `GENDER` (4.696) und `SEX` (3.726). Die Ergebnisse beschreiben damit ausschließlich die gemeinsame, auf diese Taxonomie abgebildete Aufgabenstellung.
+
+---
+
+
+## Bewertungsmethode
+
+### Vereinheitlichung der Klassen
+
+Die detaillierten OpenPII-Labels werden zusammengeführt: etwa Vor- und Nachnamen zu `PRIVATE_PERSON`, Adressbestandteile zu `PRIVATE_ADDRESS` und mehrere Identifikationsnummern zu `ACCOUNT_NUMBER`. Presidio-Ausgaben werden ebenfalls abgebildet, beispielsweise `PERSON` auf `PRIVATE_PERSON`, `DATE_TIME` auf `PRIVATE_DATE`, `LOCATION` auf `PRIVATE_ADDRESS` und `CREDIT_CARD`, `IBAN_CODE` oder `ID` auf `ACCOUNT_NUMBER`.
+
+Presidio-Ergebnisse ohne Vergleichsklasse zählen nicht als Fehlklassifikation in den Tabellen, sondern werden separat protokolliert. Das betrifft insbesondere `ORGANIZATION` (4.091 Vorhersagen), außerdem `MEDICAL_LICENSE` (57) und `IP_ADDRESS` (44).
+
+### Trefferdefinition und ihre Konsequenz
+
+Ein Referenzspan gilt als erkannt, wenn mindestens eine Vorhersage
+
+1. dieselbe Vergleichsklasse hat und
+2. sich mit seinem Zeichenbereich überschneidet.
+
+Eine Vorhersage zählt als False Positive, wenn sie keinen typgleichen Referenzspan überlappt. Eine Referenz ohne solche Vorhersage zählt als False Negative. Die Implementierung verwendet **kein** One-to-one-Matching. Dadurch kann beispielsweise ein breiter vorhergesagter Adressspan mehrere einzeln annotierte Adressbestandteile abdecken. Diese Entscheidung ist sinnvoll, um eine grobere Modelltaxonomie mit feingranularen OpenPII-Annotationen zu vergleichen; sie misst aber Abdeckung, nicht exakte Spangleichheit.
+
+Die berichtete „Precision“ ist daher die im Skript berechnete überlappungsbasierte Präzision, nicht zwingend die Precision eines klassischen bipartiten Entity-Matchings. Auch die True Negatives sind als Anzahl von Dokumenten ohne Referenz **und** Vorhersage der jeweiligen Klasse ausgewiesen; sie sind für Entity-Level-Klassifikation keine vollständige Menge negativer Spans.
+
+Micro-Werte aggregieren TP, FP und FN über alle bewerteten Entitäten. Der Macro-F1 ist der ungewichtete Mittelwert der F1-Werte der sechs Klassen mit Referenzsupport.
+
+---
+
+## Methodische Begründung
+
+### Warum OpenPII-1M?
+
+Der Datensatz `ai4privacy/pii-masking-openpii-1m` eignet sich für diesen Vergleich aus drei Gründen. Erstens enthält er für den Quelltext bereits annotierte Zeichenpositionen und Typen im Feld `privacy_mask`. Die Referenz kann deshalb direkt und reproduzierbar gegen die von beiden Systemen zurückgegebenen Zeichenbereiche geprüft werden. Zweitens deckt der deutsche Validierungsteil eine große Zahl von Beispielen und mehrere für Datenschutz relevante PII-Klassen ab; seltene Einzelfälle bestimmen die Gesamtkennzahlen damit weniger stark. Drittens bietet seine detaillierte Taxonomie eine gemeinsame Ausgangsbasis, die sich auf die gröbere, gemeinsame Vergleichstaxonomie der beiden Systeme abbilden lässt.
+
+Die Wahl des Datensatzes bedeutet nicht, dass die Ergebnisse uneingeschränkt auf jede Unternehmensdomäne übertragbar sind. Sie zeigen die Leistung auf OpenPII-Texten und unter dessen Annotationsregeln. Für produktive Entscheidungen sollten zusätzlich eigene, repräsentative Dokumente und die dort relevanten Entitätstypen evaluiert werden.
+
+### Warum kein exaktes Span-Matching?
+
+Ein exaktes Matching würde nur dann einen Treffer vergeben, wenn Startposition, Endposition und Klasse identisch sind. Es wäre angemessen, wenn Referenz und beide Modelle dieselbe Entitätsgranularität verwenden würden. Im vorliegenden Vergleich würde es jedoch systematisch Unterschiede in der Granularität bestrafen: OpenPII annotiert etwa Vorname, Nachname, Straße, Hausnummer und Ort als getrennte Teilentitäten, während ein Modell dieselben Informationen als zusammenhängende Person oder Adresse ausgeben kann. Ein solcher Treffer wäre in einer Maskierungsanwendung nützlich, würde bei exakten Grenzen jedoch vollständig als Fehler gezählt.
+
+Die typgleiche Überlappung beantwortet daher die praktischere Frage, ob ein System die annotierte PII erkennt und der richtigen Schutzklasse zuordnet. Das praktische Ziel eines PII-Systems ist, sensible Inhalte zuverlässig einer Schutzmaßnahme wie Maskierung, Ersetzung oder Blockierung zuzuführen. Dafür ist entscheidend, dass die relevante PII erkannt wird und die Schutzmaßnahme der richtigen Klasse folgt; ob dieselbe Information intern als ein zusammenhängender Span oder als mehrere Teilspans segmentiert wird, ist nachrangig. Mehrere detaillierte Referenzlabels werden einer gemeinsamen Klasse zugeordnet. Deshalb darf die Kennzahl nicht davon abhängen, ob ein Modell dieselbe PII als einen zusammenhängenden Span oder als mehrere Teilspans ausgibt. Ohne Überlappungsregel würde sie vor allem unterschiedliche Segmentierung messen, nicht die Erkennung der PII. Sie ersetzt keine Bewertung der Grenzengenauigkeit: Teilspans und überbreite Spans können als Treffer zählen. Diese Eigenschaft wird ausdrücklich akzeptiert, weil die Messung die Erkennungsabdeckung bei unterschiedlicher Granularität bewertet.
+
+### Wie macht dieses Vorgehen die Modelle vergleichbar?
+
+Die beiden Systeme liefern keine identische native Taxonomie. Deshalb werden sowohl Referenz- als auch Modelllabels auf acht gemeinsame Vergleichsklassen normalisiert. So werden zum Beispiel verschiedene Namenskomponenten als `PRIVATE_PERSON`, Adressbestandteile als `PRIVATE_ADDRESS` und Presidio-Typen wie `DATE_TIME` oder `PHONE_NUMBER` auf die entsprechenden Vergleichsklassen überführt. Nur eine Vorhersage derselben Vergleichsklasse kann einen Referenzspan abdecken; eine bloße räumliche Überlappung mit falscher Klasse genügt nicht.
+
+Damit kontrolliert der Vergleich zwei sonst vermischte Effekte: die unterschiedliche Klassenbenennung und die unterschiedliche Span-Granularität. Gemessen wird, wie gut jedes System innerhalb einer gemeinsamen PII-Aufgabe relevante Referenzinformationen abdeckt. Nicht unterstützte Referenzklassen sowie Presidio-Ausgaben ohne Gegenstück werden transparent separat ausgewiesen, statt sie als scheinbar vergleichbare Klassenwerte zu verrechnen.
+
+Die Kennzahlen zeigen damit unmittelbar, welches System sensible Informationen im Vergleich zuverlässiger einer Schutzmaßnahme zuführen kann. Ein höherer Recall bedeutet, dass mehr der in der gemeinsamen Taxonomie annotierten PII durch mindestens eine passende Vorhersage abgedeckt werden und somit weniger relevante Informationen unerkannt bleiben. Eine höhere überlappungsbasierte Precision bedeutet, dass weniger Vorhersagen ohne passende Referenzspanüberlappung auftreten und Schutzmaßnahmen daher seltener auf nicht annotierte Inhalte angewendet werden. Ein höherer F1-Wert steht für eine bessere Balance aus Abdeckung und Präzision **innerhalb dieser harmonisierten Abdeckungsaufgabe**.
+
+OpenPII-1M ist für diese Bewertung besonders gut geeignet, weil der Datensatz eine große Zahl deutschsprachiger Beispiele, vielfältige PII-Typen und präzise annotierte Zeichenbereiche in einer einheitlichen Referenz vereint. Er schafft damit eine kontrollierte und reproduzierbare Vergleichssituation, die mit unannotierten Kundendaten nicht erreichbar wäre. Dem Fehlen konkreter Kundendaten wird durch die Beschränkung auf den deutschen Split, die gemeinsame Schutzklassentaxonomie und die Bewertung einer großen Zahl relevanter PII-Vorkommen entgegengewirkt. Das Ergebnis ist daher eine fundierte und belastbare Indikation der Leistungsreihenfolge für vergleichbare Einsatzszenarien.
+
+Eine exakt auf einen einzelnen Kunden bezogene Leistungsprognose lässt sich jedoch nur durch eine zusätzliche Validierung auf repräsentativen, fachlich annotierten Kundendaten treffen. Dokumenttypen, Schreibweisen, Fachvokabular und kundenspezifische PII-Formate können im Einzelfall von der Benchmarkrealität abweichen. Der Benchmark ersetzt diese abschließende Prüfung nicht, liefert aber eine objektive, breit abgestützte Grundlage für die Vorauswahl und Erwartungsbildung.
+
+---
+
+## Ergebnisse
+
+### Gesamtvergleich
+
+| Modell | Precision | Recall | Micro-F1 | Macro-F1 |
+| --- | ---: | ---: | ---: | ---: |
+| `openai/privacy-filter` | **90,13 %** | **84,03 %** | **86,98 %** | **88,47 %** |
+| Presidio (`de_core_news_lg`) | 74,03 % | 51,71 % | 60,89 % | 57,43 % |
+
+`openai/privacy-filter` liegt beim Micro-F1 um **26,09 Prozentpunkte** und beim Recall um **32,32 Prozentpunkte** vor Presidio. Die hohe Precision beider Systeme in einigen Klassen darf nicht über den Recall hinwegtäuschen: Für eine Maskierungs- oder DLP-Anwendung sind übersehene PII besonders relevant.
+
+### Ergebnisse nach Klasse
+
+| Vergleichsklasse | Support | Privacy Filter F1 | Presidio F1 | Einordnung |
+| --- | ---: | ---: | ---: | --- |
+| Account Number | 21.407 | **82,76 %** | 0,00 % | Presidio erzeugt nur zwei gemappte Vorhersagen und trifft keine Referenz. |
+| Private Address | 34.529 | **81,84 %** | 60,24 % | Der Privacy Filter findet deutlich mehr Referenzspans; Presidio hat 51,07 % Recall. |
+| Private Date | 19.977 | **97,84 %** | 50,20 % | Größter Unterschied nach Kontonummern; Presidio-Recall nur 34,10 %. |
+| Private Email | 12.046 | 99,64 % | **99,81 %** | Beide erkennen die strukturierte Klasse nahezu vollständig. |
+| Private Person | 44.391 | **85,39 %** | 80,35 % | Beide sind stark; der Unterschied entsteht vor allem im Recall (77,86 % vs. 72,22 %). |
+| Private Phone | 9.084 | **83,32 %** | 53,96 % | Ähnlich hoher Recall des Privacy Filters (99,65 %), aber mehr FP als bei Presidio. |
+
+Für URL und Secret gibt es keinen Referenzsupport; die auffälligen Vorhersagen werden im Anhang analysiert und sind überwiegend auf abweichende Klassenzuordnungen zu tatsächlich annotierter PII zurückzuführen.
+
+---
+
+## Interpretation
+
+Der Unterschied bei `ACCOUNT_NUMBER` ist erwartbar, weil Presidio in dieser Konfiguration nur die eigenen Recognizer-Ausgaben `CREDIT_CARD`, `IBAN_CODE` und `ID` auf diese Klasse abbildet. Es gibt keinen Hinweis darauf, dass Presidio hier jede in OpenPII zusammengefasste Dokument-, Sozial- oder Steueridentifikationsnummer als solche erkennen kann. Der Wert von 0,00 % beschreibt daher primär die Grenzen der gewählten Presidio-Konfiguration und Taxonomieabbildung, nicht die prinzipielle Leistungsfähigkeit aller möglichen Presidio-Setups.
+
+Bei `PRIVATE_DATE` und `PRIVATE_PHONE` ist der Vorteil des Privacy Filters vor allem ein Recall-Vorteil. Für datenschutzorientierte Vorverarbeitung ist das praktisch bedeutsam, weil nicht erkannte Entitäten unmaskiert bleiben können. Zugleich zeigt die Phone-Precision von 71,60 %, dass eine höhere Abdeckung mit zusätzlichen Maskierungen einhergeht. Welche Fehlerseite schwerer wiegt, hängt vom Einsatz ab: DLP bevorzugt typischerweise Recall, während Anwendungen mit starkem Informationsverlust eine sorgfältige Schwellen- und Fehleranalyse benötigen.
+
+Die nahezu identischen E-Mail-Ergebnisse zeigen, dass für klar strukturierte, regelnahe PII beide Ansätze sehr wirksam sind. Der Vorsprung des VARIOS Privacy Filters entsteht folglich nicht durch diese leichte Klasse, sondern durch die breite Abdeckung und hohe Erkennungsrate von PII-Daten.
+
+---
+
+## Grenzen und nächste Schritte
+
+Der Vergleich ist reproduzierbar für die vorliegenden Skripte, aber seine Aussagegrenzen sollten bei der Kommunikation der Resultate explizit bleiben:
+
+- Die Klassenzuordnung ist grob und bevorzugt eine gemeinsame Vergleichsebene; sie bewertet keine feingranularen OpenPII-Kategorien.
+- Überlappung statt exakter Grenzen kann Teiltreffer und überbreite Treffer begünstigen. Ein ergänzender Benchmark mit One-to-one-Matching und einer IoU- oder Exact-Span-Regel würde die Spanqualität separat sichtbar machen.
+- Presidio wird mit `de_core_news_lg` und einer explizit festgelegten Score-Schwelle von 0,35 evaluiert. Der Score wird von den jeweiligen Presidio-Recognizern erzeugt und dient als Konfidenzmaß für eine Vorhersage. Da Presidio keine universell optimale Schwelle vorgibt, wurde der Wert für diesen reproduzierbaren Benchmark konstant gehalten. Eine produktive Konfiguration sollte die Schwelle anhand repräsentativer Ziel- oder Kundendaten entsprechend dem gewünschten Verhältnis von Recall und Precision kalibrieren. Zusätzliche oder angepasste Recognizer können das Ergebnis ebenfalls verändern.
+- Nicht unterstützte Referenzklassen und ungemappte Presidio-Ausgaben gehen nicht in die Kernmetriken ein. Für eine vollständige Datenschutzrisikoanalyse sollten sie separat bewertet werden.
+
+## Fazit
+
+Auf dem deutschen Validierungssplit des OpenPII-Datensatzes erzielt der VARIOS Privacy Filter bei der Entity-Level-Evaluation mit klassenidentischer Spanüberlappung eine deutlich höhere Erkennungsleistung personenbezogener Informationen als das mit dem spaCy-Modell de_core_news_lg betriebene Microsoft-Presidio-System. Besonders ausgeprägt ist der Leistungsvorsprung bei Kontonummern, Datumsangaben und Telefonnummern, während beide Systeme E-Mail-Adressen nahezu fehlerfrei erkennen.
+
+Für Kunden bedeutet dieser Vorsprung, dass der VARIOS Privacy Filter im Benchmark deutlich mehr relevante PII erkennt und damit das Risiko reduziert, sensible Informationen ungeschützt an nachgelagerte Systeme weiterzugeben. Zugleich bleibt die Zahl unnötiger Schutzmaßnahmen auf einem vergleichsweise niedrigen Niveau. Der VARIOS Privacy Filter bietet damit eine starke Grundlage für Datenschutz-, DLP- und KI-Anwendungsfälle, in denen eine hohe Erkennungsabdeckung entscheidend ist. Er verbindet die für den produktiven Schutz sensibler Daten notwendige Breite der Erkennung mit einer hohen Präzision und schafft so die Voraussetzung, KI und Datenprozesse sicherer, datenschutzkonformer und mit deutlich geringerem Risiko für Datenoffenlegungen zu nutzen.
+
+## Anhang
+
+## Reproduzierbarkeit
+
+Die folgenden Angaben definieren die Benchmark-Konfiguration. Die verwendeten Python-Abhängigkeiten sind in `requirements.txt` versionsgenau festgehalten.
+
+| Komponente | Festgelegte Konfiguration |
+| --- | --- |
+| Datensatz | `ai4privacy/pii-masking-openpii-1m`, Split `validation`, Sprachfilter `de` |
+| Umfang | 23.926 deutschsprachige Einträge, keine Begrenzung der Stichprobe |
+| Privacy Filter | `openai/privacy-filter`, ONNX INT8, CPU, Batchgröße 8 |
+| Presidio | `presidio_analyzer` 2.2.362, spaCy 3.8.14, `de_core_news_lg` 3.8.0, Score-Schwelle 0,35 |
+| Inferenzbibliotheken | ONNX Runtime 1.25.0, Transformers 5.6.0, PyTorch 2.11.0+cpu |
+| Bewertungsregel | Identische Vergleichsklasse und überlappender Zeichenbereich, kein One-to-one-Matching |
+| Ergebnisdateien | `benchmark_privacy_filter_onnx_int8_entity_level_results.txt` und `benchmark_presidio_de_core_news_lg_entity_level_results.txt` |
+
+Die Ergebnisdateien lassen sich mit den folgenden Befehlen aus dem Projektverzeichnis erzeugen:
+
+```powershell
+python .\benchmark_privacy_filter_onnx_int8_Entity_level.py --runtime onnx-int8 --device cpu --filter-language de
+python .\benchmark_presidio_de_core_news_lg_Entity_level.py --filter-language de --score-threshold 0.35
+```
+
+Die Hardwarebezeichnung und ein fester Revision-Hash des Hugging-Face-Datensatzes wurden für den vorliegenden Lauf nicht protokolliert. Sie beeinflussen die gemessene Qualitätsmetrik voraussichtlich nicht wesentlich, sollten jedoch bei einer formalen Wiederholung zusätzlich erfasst beziehungsweise festgeschrieben werden.
+
+---
+
+## Einordnung der Überlappungsmetrik
+
+Die Kennzahlen verwenden bewusst kein One-to-one-Matching: Eine gleichklassige Vorhersage kann mehrere überlappende Referenzteilspans abdecken. Erkennt ein Modell beispielsweise `Max Mustermann` als eine Person, während die Referenz Vor- und Nachname getrennt annotiert, gelten beide Referenzteile als abgedeckt. Dies entspricht dem praktischen Ziel eines PII-Systems, die vollständige Information einer Schutzmaßnahme zuzuführen, statt eine bestimmte Segmentierungskonvention zu reproduzieren. Die Werte sind daher als überlappungsbasierte Abdeckungsmetriken zu interpretieren und nicht als striktes, klassisches Entity-Level-F1 mit eindeutiger Paarung.
+
+## Analyse der URL- und Secret-Vorhersagen
+
+Die explorative Analyse von 4.000 Beispielen zeigt, dass die überwiegende Mehrheit der auffälligen Vorhersagen reale, jedoch anders klassifizierte PII betrifft: 2.199 von 2.218 Presidio-URL-Vorhersagen überlappen mit anders gelabelten Referenzspans, fast ausschließlich mit E-Mail-Adressen, weil Presidio deren Domainteil als URL erkennt. Beim Privacy Filter überlappen 34 von 38 URL-/Secret-Vorhersagen mit anderen Referenzklassen, überwiegend mit Führerscheinnummern, die als `SECRET` erkannt werden. Die Werte sind somit im klassenstrengen Benchmark korrekt als Fehlklassifikationen erfasst, sprechen aber nicht überwiegend für zufällige Fehlalarme auf harmlose Inhalte.

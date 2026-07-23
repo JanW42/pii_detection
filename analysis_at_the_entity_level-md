@@ -1,0 +1,172 @@
+# Vergleich von Datenschutzfiltern für deutsche Texte
+
+## Das Wichtigste auf einen Blick
+
+Dieser Vergleich stellt den VARIOS Privacy Filter Microsoft Presidio gegenüber. Beide Lösungen wurden mit denselben deutschsprachigen Beispieltexten geprüft. In diesen Texten war bereits dokumentiert, welche persönlichen und vertraulichen Angaben geschützt werden müssen.
+
+Der VARIOS Privacy Filter erzielt im Vergleich die deutlich bessere Gesamtleistung. Seine größten Vorteile liegen bei Konto- und Identifikationsnummern, Datumsangaben, Adressen und Telefonnummern. Bei E-Mail-Adressen liefern beide Lösungen nahezu gleich starke Ergebnisse.
+
+Die Auswertung zeigt, wie zuverlässig die Systeme schutzbedürftige Informationen für eine Schutzmaßnahme wie Schwärzen, Ersetzen oder Blockieren finden. Entscheidend ist dabei, dass die relevante Information erkannt wird; die exakte Aufteilung einer Textstelle ist nachrangig.
+
+---
+
+## Ziel des Vergleichs und verwendete Daten
+
+Ziel ist ein fairer Vergleich der Erkennung persönlicher und vertraulicher Angaben in deutschen Texten. Grundlage sind **23.926** deutschsprachige Texte aus `ai4privacy/pii-masking-openpii-1m`. Für jeden Text liegt eine Referenz vor, die die zu schützenden Angaben beschreibt.
+
+Verglichen wurden:
+
+| System | Verwendete Einstellung |
+| --- | --- |
+| VARIOS Privacy Filter | Für eine schnelle Ausführung auf einem üblichen Rechner vorbereitet, Verarbeitung in kleinen Gruppen |
+| Microsoft Presidio | Deutsche Sprachkomponente mit festgelegter Erkennungsschwelle |
+
+Die schnelle Rechnerausführung des VARIOS Privacy Filters wurde zusätzlich mit einer Ausführung auf leistungsstarker Hardware verglichen. Die Erkennungsqualität blieb dabei gleich.
+
+Bewertet wurden die Schutzgruppen, die beide Lösungen sinnvoll vergleichen können: Konto- und Identifikationsnummern, Adressen, Datumsangaben, E-Mail-Adressen, Personen und Telefonnummern. Angaben ohne gemeinsame Vergleichsgrundlage wurden bewusst nicht eingerechnet.
+
+---
+
+## So wurde bewertet
+
+Beide Lösungen wurden auf dieselben gemeinsamen Schutzgruppen übertragen. So lassen sich unterschiedliche Bezeichnungen und verschiedene Arten, Textstellen aufzuteilen, fair vergleichen.
+
+Eine Angabe gilt als erkannt, wenn das System die richtige Schutzgruppe meldet und sich die Fundstelle mit der hinterlegten Stelle im Text überschneidet. Erkennt ein System beispielsweise einen vollständigen Namen oder eine vollständige Adresse, zählen auch einzeln hinterlegte Bestandteile als abgedeckt.
+
+Die Auswertung macht sichtbar, wie viele Angaben erkannt, übersehen oder zusätzlich markiert werden. Der Gesamtwert verbindet Abdeckung und Treffergenauigkeit zu einer verständlichen Gesamtbewertung.
+
+---
+
+## Einordnung des Vergleichs
+
+Die Textsammlung bietet eine große, einheitliche und nachvollziehbare Grundlage für den Vergleich deutscher Datenschutzfilter. Die Ergebnisse zeigen damit belastbar, welche Lösung sensible Angaben im getesteten Szenario besser schützt.
+
+Die Ergebnisse bieten eine starke Grundlage für die Bewertung des VARIOS Privacy Filters in deutschsprachigen Einsatzszenarien. Für die optimale Ausrichtung auf individuelle Dokumente, Datenformate und Schutzanforderungen empfiehlt sich ergänzend ein Test mit typischen Kundendokumenten. So lässt sich das bereits hohe Schutzniveau gezielt auf den jeweiligen Anwendungsfall abstimmen.
+
+---
+
+## Ergebnisse
+
+### Gesamtvergleich
+
+| Lösung | Treffergenauigkeit | Abdeckung | Gesamtwert | Durchschnitt über Schutzgruppen |
+| --- | ---: | ---: | ---: | ---: |
+| VARIOS Privacy Filter | **90,13 %** | **84,03 %** | **86,98 %** | **88,47 %** |
+| Presidio (`de_core_news_lg`) | 74,03 % | 51,71 % | 60,89 % | 57,43 % |
+
+Der VARIOS Privacy Filter liegt beim Gesamtwert um **26,09 Prozentpunkte** und bei der Abdeckung um **32,32 Prozentpunkte** vor Presidio. Eine hohe Treffergenauigkeit in einzelnen Schutzgruppen darf nicht darüber hinwegtäuschen, dass übersehene Angaben für das Schwärzen oder für den Schutz von Datenflüssen besonders relevant sind.
+
+### Ergebnisse nach Schutzgruppe
+
+| Schutzgruppe | Hinterlegte Angaben | VARIOS Privacy Filter: Gesamtwert | Presidio: Gesamtwert | Einordnung |
+| --- | ---: | ---: | ---: | --- |
+| Konto- und Identifikationsnummer | 21.407 | **82,76 %** | 0,00 % | Presidio liefert nur zwei zuordenbare Meldungen und trifft keine Referenz. |
+| Adresse | 34.529 | **81,84 %** | 60,24 % | Der VARIOS Privacy Filter findet deutlich mehr hinterlegte Textstellen; Presidio erreicht eine Abdeckung von 51,07 %. |
+| Datumsangabe | 19.977 | **97,84 %** | 50,20 % | Der größte Unterschied nach Konto- und Identifikationsnummern; die Abdeckung von Presidio liegt bei 34,10 %. |
+| E-Mail-Adresse | 12.046 | 99,64 % | **99,81 %** | Beide Lösungen erkennen diese klar strukturierte Angabe nahezu vollständig. |
+| Personenangabe | 44.391 | **85,39 %** | 80,35 % | Beide Lösungen sind stark; der Unterschied liegt vor allem bei der Abdeckung (77,86 % gegenüber 72,22 %). |
+| Telefonnummer | 9.084 | **83,32 %** | 53,96 % | Der VARIOS Privacy Filter erreicht eine sehr hohe Abdeckung von 99,65 %, erzeugt aber mehr zusätzliche Markierungen. |
+
+Für URL und SECRET liegen keine hinterlegten Vergleichsangaben vor. Auffällige Meldungen werden im Anhang erläutert. Sie beruhen überwiegend darauf, dass tatsächlich schutzbedürftige Angaben einer anderen Schutzgruppe zugeordnet wurden.
+
+---
+
+## Einordnung der Ergebnisse
+
+Der Unterschied bei `ACCOUNT_NUMBER` ist nachvollziehbar. In der geprüften Presidio-Konfiguration werden nur die eigenen Erkennungen `CREDIT_CARD`, `IBAN_CODE` und `ID` dieser Schutzgruppe zugeordnet. Es gibt keinen Hinweis darauf, dass Presidio damit alle in den Testdaten zusammengefassten Dokument-, Sozial- oder Steueridentifikationsnummern erkennen kann. Der Wert von 0,00 % beschreibt daher vor allem die Grenzen dieser konkreten Presidio-Einstellung und der verwendeten Zuordnung, nicht die Leistungsfähigkeit jeder denkbaren Presidio-Erweiterung.
+
+Bei `PRIVATE_DATE` und `PRIVATE_PHONE` beruht der Vorteil des VARIOS Privacy Filters vor allem auf der besseren Abdeckung. Für datenschutzorientierte Prozesse ist das praktisch bedeutsam, weil nicht erkannte Angaben ungeschützt bleiben können. Zugleich zeigt die Treffergenauigkeit bei Telefonnummern von 71,60 %, dass eine breitere Abdeckung mit zusätzlichen Markierungen einhergeht. Welche Fehlerseite schwerer wiegt, hängt vom Einsatz ab: Beim Schutz von Datenflüssen ist eine hohe Abdeckung meist besonders wichtig. In Anwendungen, in denen jede Schwärzung erheblichen Informationsverlust bedeutet, sollten Einstellung und Fehlerbild sorgfältig geprüft werden.
+
+Die nahezu identischen Ergebnisse bei E-Mail-Adressen zeigen, dass beide Lösungen klar strukturierte Angaben sehr gut erkennen. Der Vorsprung des VARIOS Privacy Filters entsteht daher nicht bei dieser leicht erkennbaren Schutzgruppe, sondern durch die breitere und zuverlässigere Erkennung unterschiedlicher persönlicher und vertraulicher Angaben.
+
+---
+
+## Grenzen des Vergleichs und sinnvolle nächste Schritte
+
+Der Vergleich kann mit den vorhandenen Programmen wiederholt werden. Seine Grenzen sollten bei der Kommunikation der Ergebnisse dennoch klar bleiben:
+
+- Die gemeinsame Zuordnung fasst detaillierte Angaben zusammen. Sie bewertet keine sehr feinen Unterarten aus der Textsammlung.
+- Die Bewertung über Überschneidungen kann Teiltreffer und zu breit gefasste Markierungen begünstigen. Eine ergänzende Prüfung mit eindeutiger Zuordnung und exakt passenden Textgrenzen würde die Qualität der Markierungsgrenzen zusätzlich sichtbar machen.
+- Presidio wurde mit `de_core_news_lg` und einer festgelegten Erkennungsschwelle von 0,35 geprüft. Diese Schwelle bestimmt, ab wann Presidio eine Fundstelle ausgibt. Da Presidio keinen allgemein besten Wert vorgibt, wurde sie für diesen nachvollziehbaren Vergleich konstant gehalten. Für einen produktiven Einsatz sollte die Einstellung mit typischen Ziel- oder Kundendaten auf das gewünschte Verhältnis zwischen möglichst wenigen übersehenen Angaben und möglichst wenigen unnötigen Markierungen abgestimmt werden. Zusätzliche oder angepasste Presidio-Regeln können das Ergebnis ebenfalls verändern.
+- Referenzgruppen ohne Unterstützung und Presidio-Meldungen ohne gemeinsame Schutzgruppe fließen nicht in die Kernwerte ein. Für eine vollständige Datenschutzrisikoanalyse sollten sie getrennt betrachtet werden.
+
+## Fazit
+
+Auf den deutschen Beispieltexten erzielt der VARIOS Privacy Filter bei der hier verwendeten Bewertung eine deutlich höhere Erkennungsleistung für persönliche und vertrauliche Informationen als Microsoft Presidio in der geprüften Konfiguration. Besonders deutlich ist der Vorsprung bei Konto- und Identifikationsnummern, Datumsangaben und Telefonnummern. Bei E-Mail-Adressen erkennen beide Lösungen nahezu alle hinterlegten Angaben.
+
+Für Kunden bedeutet dieser Vorsprung: Der VARIOS Privacy Filter findet im Vergleich deutlich mehr relevante Informationen und reduziert damit das Risiko, dass sensible Angaben ungeschützt an nachgelagerte Systeme weitergegeben werden. Gleichzeitig bleibt die Zahl unnötiger Schutzmaßnahmen vergleichsweise niedrig. Damit bietet der VARIOS Privacy Filter eine starke Grundlage für Datenschutz-, Schutz-von-Datenflüssen- und KI-Anwendungsfälle, bei denen eine hohe Erkennungsabdeckung entscheidend ist. Er verbindet breite Erkennung mit gezielter Markierung und hilft dabei, Datenprozesse sicherer und mit geringerem Risiko unbeabsichtigter Offenlegungen zu gestalten.
+
+## Anhang
+
+## Nachvollziehbarkeit des Vergleichs
+
+Die folgenden Angaben beschreiben die festgelegte Vergleichskonfiguration. Die verwendeten Python-Bestandteile sind in `requirements.txt` mit ihren genauen Fassungen festgehalten.
+
+| Bestandteil | Festgelegte Einstellung |
+| --- | --- |
+| Textsammlung | `ai4privacy/pii-masking-openpii-1m`, Bereich `validation`, Sprachfilter `de` |
+| Umfang | 23.926 deutschsprachige Texte, keine Begrenzung der Auswahl |
+| VARIOS Privacy Filter | Für schnelle Rechnerausführung vorbereitet, Verarbeitung in kleinen Gruppen |
+| Presidio | `presidio_analyzer` 2.2.362, spaCy 3.8.14, `de_core_news_lg` 3.8.0, Erkennungsschwelle 0,35 |
+| Verwendete Laufzeit-Bestandteile | ONNX Runtime 1.25.0, Transformers 5.6.0, PyTorch 2.11.0+cpu |
+| Bewertungsregel | Gleiche Schutzgruppe und überlappender Textbereich; keine starre Eins-zu-eins-Zuordnung |
+| Ergebnisdateien | `benchmark_privacy_filter_onnx_int8_entity_level_results.txt` und `benchmark_presidio_de_core_news_lg_entity_level_results.txt` |
+
+Die Ergebnisdateien lassen sich mit den folgenden Befehlen aus dem Projektverzeichnis erzeugen:
+
+```powershell
+python .\benchmark_privacy_filter_onnx_int8_Entity_level.py --runtime onnx-int8 --device cpu --filter-language de
+python .\benchmark_presidio_de_core_news_lg_Entity_level.py --filter-language de --score-threshold 0.35
+```
+
+Die verwendete Rechnerbezeichnung und eine feste Kennung der verwendeten Datenfassung wurden für diesen Lauf nicht festgehalten. Sie beeinflussen die gemessene Erkennungsqualität voraussichtlich nicht wesentlich, sollten bei einer formalen Wiederholung jedoch zusätzlich dokumentiert werden.
+
+---
+
+## Bedeutung der Überschneidungsbewertung
+
+Die Kennzahlen verwenden bewusst keine starre Eins-zu-eins-Zuordnung. Eine Fundstelle derselben Schutzgruppe kann mehrere überlappende Referenzteile abdecken. Erkennt eine Lösung beispielsweise `Max Mustermann` als vollständige Personenangabe, während die Referenz Vor- und Nachname getrennt hinterlegt, gelten beide Teile als abgedeckt.
+
+Das entspricht dem praktischen Ziel eines Datenschutzfilters: Die vollständige Information soll einer Schutzmaßnahme zugeführt werden, statt eine bestimmte Art der Textaufteilung genau nachzubilden. Die Werte sind deshalb als Maße für die Erkennungsabdeckung bei Textüberschneidung zu verstehen, nicht als besonders strenge Prüfung mit einer eindeutigen Paarung jeder einzelnen Fundstelle.
+
+## Einordnung von URL- und SECRET-Meldungen
+
+Eine zusätzliche Prüfung von **4.000** Beispielen zeigt, dass die meisten auffälligen Meldungen tatsächlich schutzbedürftige Angaben betreffen, aber einer anderen Schutzgruppe zugeordnet wurden. **2.199** von **2.218** Presidio-URL-Meldungen überschneiden sich mit anders gekennzeichneten Referenzstellen, fast immer mit E-Mail-Adressen. Presidio erkennt dabei den Teil nach dem @-Zeichen als URL.
+
+Beim VARIOS Privacy Filter überschneiden sich **34** von **38** URL- oder SECRET-Meldungen mit anderen Referenzgruppen, überwiegend mit Führerscheinnummern, die als `SECRET` erkannt werden. Im strengen Vergleich nach Schutzgruppen werden diese Fälle zu Recht als falsche Zuordnung gezählt. Sie sprechen jedoch überwiegend nicht für zufällige Meldungen auf unkritische Inhalte.
+
+---
+
+## Rohdaten des VARIOS Privacy Filters
+
+Die folgende Tabelle enthält die vollständigen Rohwerte der Auswertung des VARIOS Privacy Filters. „Richtig erkannt“ steht für passende Treffer. „Zusätzlich markiert“ bezeichnet Markierungen ohne passende Referenz. „Übersehen“ bezeichnet hinterlegte Angaben, die nicht gefunden wurden. Die Werte in der Spalte „Texte ohne Fundstelle und ohne Referenz“ beziehen sich auf vollständige Texte.
+
+| Schutzgruppe | Hinterlegte Angaben | Richtig erkannt | Zusätzlich markiert | Übersehen | Texte ohne Fundstelle und ohne Referenz | Treffergenauigkeit | Abdeckung | Gesamtwert |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| ACCOUNT_NUMBER | 21,407 | 18,367 | 4,611 | 3,040 | 10,276 | 79.93% | 85.80% | 82.76% |
+| PRIVATE_ADDRESS | 34,529 | 25,081 | 1,686 | 9,448 | 11,523 | 93.70% | 72.64% | 81.84% |
+| PRIVATE_DATE | 19,977 | 19,765 | 661 | 212 | 8,363 | 96.76% | 98.94% | 97.84% |
+| PRIVATE_EMAIL | 12,046 | 12,024 | 66 | 22 | 12,455 | 99.45% | 99.82% | 99.64% |
+| PRIVATE_PERSON | 44,391 | 34,564 | 1,997 | 9,827 | 7,406 | 94.54% | 77.86% | 85.39% |
+| PRIVATE_PHONE | 9,084 | 9,052 | 3,591 | 32 | 13,383 | 71.60% | 99.65% | 83.32% |
+| PRIVATE_URL | 0 | 0 | 329 | 0 | 23,662 | 0.00% | 0.00% | 0.00% |
+| SECRET | 0 | 0 | 74 | 0 | 23,860 | 0.00% | 0.00% | 0.00% |
+
+Besonders wichtig sind „Abdeckung“ und „Übersehen“: Eine hohe Abdeckung und wenige übersehene Angaben zeigen, wie zuverlässig der VARIOS Privacy Filter sensible Informationen für eine Schutzmaßnahme findet.
+
+## Rohdaten von Microsoft Presidio
+
+Die folgende Tabelle enthält die vollständigen Rohwerte der Auswertung von Microsoft Presidio. Die Spalten haben dieselbe Bedeutung wie in der Tabelle zum VARIOS Privacy Filter.
+
+| Schutzgruppe | Hinterlegte Angaben | Richtig erkannt | Zusätzlich markiert | Übersehen | Texte ohne Fundstelle und ohne Referenz | Treffergenauigkeit | Abdeckung | Gesamtwert |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| ACCOUNT_NUMBER | 21,407 | 0 | 2 | 21,407 | 11,106 | 0.00% | 0.00% | 0.00% |
+| PRIVATE_ADDRESS | 34,529 | 17,634 | 6,385 | 16,895 | 9,807 | 73.42% | 51.07% | 60.24% |
+| PRIVATE_DATE | 19,977 | 6,813 | 356 | 13,164 | 8,387 | 95.03% | 34.10% | 50.20% |
+| PRIVATE_EMAIL | 12,046 | 12,037 | 36 | 9 | 12,456 | 99.70% | 99.93% | 99.81% |
+| PRIVATE_PERSON | 44,391 | 32,061 | 3,353 | 12,330 | 7,172 | 90.53% | 72.22% | 80.35% |
+| PRIVATE_PHONE | 9,084 | 4,584 | 3,321 | 4,500 | 13,053 | 57.99% | 50.46% | 53.96% |
+| PRIVATE_URL | 0 | 0 | 12,196 | 0 | 12,404 | 0.00% | 0.00% | 0.00% |
+| SECRET | 0 | 0 | 0 | 0 | 23,926 | 0.00% | 0.00% | 0.00% |
+
+Die Tabellen lassen sich zeilenweise vergleichen: Bei derselben Schutzgruppe zeigt eine höhere Abdeckung bei weniger übersehenen Angaben die stärkere Schutzwirkung. Der Gesamtwert fasst Treffergenauigkeit und Abdeckung bereits zu einer ausgewogenen Gesamtbewertung zusammen und erleichtert so den direkten Vergleich.

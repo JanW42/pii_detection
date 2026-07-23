@@ -1,0 +1,26 @@
+==== Presidio (de_core_news_lg): Privacy-Filter-Comparable Entity Benchmark ====
+Model:                       de_core_news_lg (Presidio spaCy NLP engine)
+Score threshold:             0.35
+Dataset / split:             ai4privacy/pii-masking-openpii-1m / validation
+Language filter:             de
+Benchmark entries:           23,926
+Non-empty entries:           23,926
+Evaluable entries:           23,630
+Matching:                    overlapping privacy_mask span + identical comparison class
+Comparison classes:          ACCOUNT_NUMBER, PRIVATE_ADDRESS, PRIVATE_DATE, PRIVATE_EMAIL, PRIVATE_PERSON, PRIVATE_PHONE, PRIVATE_URL, SECRET
+Micro precision / recall / F1: 74.03% / 51.71% / 60.89%
+Macro F1 (6 classes with reference support): 57.43%
+
+Per comparison class (class-aware overlap):
+comparison_class   support      TP      FP      FN  TN (rows)   precision    recall        F1
+ACCOUNT_NUMBER      21,407       0       2  21,407     11,106      0.00%     0.00%     0.00%
+PRIVATE_ADDRESS     34,529  17,634   6,385  16,895      9,807     73.42%    51.07%    60.24%
+PRIVATE_DATE        19,977   6,813     356  13,164      8,387     95.03%    34.10%    50.20%
+PRIVATE_EMAIL       12,046  12,037      36       9     12,456     99.70%    99.93%    99.81%
+PRIVATE_PERSON      44,391  32,061   3,353  12,330      7,172     90.53%    72.22%    80.35%
+PRIVATE_PHONE        9,084   4,584   3,321   4,500     13,053     57.99%    50.46%    53.96%
+PRIVATE_URL              0       0  12,196       0     12,404      0.00%     0.00%     0.00%
+SECRET                   0       0       0       0     23,926      0.00%     0.00%     0.00%
+
+Unsupported reference entities (not scored): AGE=8304, DRIVERLICENSENUM=4486, GENDER=4696, SEX=3726
+Unsupported Presidio entities (no comparison class): IP_ADDRESS=44, MEDICAL_LICENSE=57, ORGANIZATION=4091

@@ -1,0 +1,76 @@
+system,row_id,entity_type,start,end,predicted_text,category,overlapping_original_labels,context
+privacy_filter_onnx_int8,29,SECRET,72,83, JWTI9U8A5R,overlaps_other_reference_label,DRIVERLICENSENUM,"Ein weiteres Augenmerk liegt auf den Fahrern von Lieferfahrzeugen, deren JWTI9U8A5R nun in das zentrale Register aufgenommen wird. Diese Information soll zusammen mit der +8"
+privacy_filter_onnx_int8,37,SECRET,455,461, Mühe!,no_reference_overlap_manual_review,,"agung stattfand, zu ergänzen: Dorfstraße 38, 1030 Innsbruck Mühlau Mühlau. Danke für deine Mühe!"
+privacy_filter_onnx_int8,136,SECRET,212,213,Z,overlaps_other_reference_label,DRIVERLICENSENUM," einen Führerschein für das Gemeinde‑Transportfahrzeug benötigt, bitte die Nummer TLSV6NX3Z2 hier teilen, und vergesst nicht, euren Reisepass E1538752 bei Bedarf vorzulegen. Bei Fra"
+privacy_filter_onnx_int8,198,PRIVATE_URL,653,656,hof,overlaps_other_reference_label,CITY,sgefüllte Formular bis zum September/03 an die Personalabteilung (hr@Linz Kaplanhof Kaplanhof.company.com).
+privacy_filter_onnx_int8,226,SECRET,300,302,WL,overlaps_other_reference_label,DRIVERLICENSENUM,d genetischer Drift informiert wurde. Meine persönlichen Daten (z. B. 23249324 und JZUFZVNWLH) werden ausschließlich für wissenschaftliche Zwecke verwendet und vertraulich behandelt.
+privacy_filter_onnx_int8,249,PRIVATE_URL,126,137,192.168.1.1,no_reference_overlap_manual_review,,"Netzwerk‑Setup‑Handbuch steht, dass der Router im Raum Neubaugasse 116 mit der IP‑Adresse 192.168.1.1 konfiguriert werden muss; notiere bitte auch deine 5020 und die zugehörige Lans Pradl Pra"
+privacy_filter_onnx_int8,515,PRIVATE_URL,27,36,mailto:WM,overlaps_other_reference_label,EMAIL,"Prof Mereme Sayori Moayed (mailto:WMGv@gmail.com)
+Betreff: Entwurf der Bühnenlayout-Strategie für das Festival am März 27., 19"
+privacy_filter_onnx_int8,656,SECRET,46,57, I9VA2OXSTQ,overlaps_other_reference_label,DRIVERLICENSENUM,"Laborprotokoll – Probenanalyse 2024
+
+Probe‑ID: I9VA2OXSTQ
+Hersteller: Providence Seigne
+Ort der Entnahme: Dammstraße 28, 8010 Wien KG Alsergrund
+Da"
+privacy_filter_onnx_int8,667,PRIVATE_URL,943,956,082.0378.1187,overlaps_other_reference_label,TELEPHONENUM,arzahlung erforderlich ist. Bei Fragen wenden Sie sich bitte an unser Servicecenter unter 082.0378.1187 oder schreiben Sie an HC@tutanota.com. Wir wünschen Ihnen einen inspirierenden Besuch und
+privacy_filter_onnx_int8,714,SECRET,425,434, NKDCEKS9,overlaps_other_reference_label,DRIVERLICENSENUM,"lar (wie in Beispiel 2) ausgefüllt? [JA/NEIN]
+4. Wenn ja, geben Sie bitte die Nummer Ihres NKDCEKS9SF an (optional).
+5. Wie schätzen Sie Ihre Kenntnisse im Bereich der Artbestimmung ein? (G"
+privacy_filter_onnx_int8,883,SECRET,121,123,WB,overlaps_other_reference_label,DRIVERLICENSENUM,"ne Leitfaden missverstanden; gemäß § 12 des Vertrags muss Senator Haingo Gibas seine 07NIXWBV2G sowie die zugehörige 78-3850049 prüfen, um mögliche Haftungsrisiken zu vermeiden."
+privacy_filter_onnx_int8,883,SECRET,118,119,N,overlaps_other_reference_label,DRIVERLICENSENUM,"terne Leitfaden missverstanden; gemäß § 12 des Vertrags muss Senator Haingo Gibas seine 07NIXWBV2G sowie die zugehörige 78-3850049 prüfen, um mögliche Haftungsrisiken zu vermeiden."
+privacy_filter_onnx_int8,883,SECRET,124,125,2,overlaps_other_reference_label,DRIVERLICENSENUM,"Leitfaden missverstanden; gemäß § 12 des Vertrags muss Senator Haingo Gibas seine 07NIXWBV2G sowie die zugehörige 78-3850049 prüfen, um mögliche Haftungsrisiken zu vermeiden."
+privacy_filter_onnx_int8,1117,SECRET,211,216,TX4UR,overlaps_other_reference_label,DRIVERLICENSENUM,"leme beim Einbinden des Bank‑Connectors, die Fehlermeldung verweist auf einen ungültigen KTX4URVG9P oder fehlende Berechtigung.
+Support: Bitte überprüfen Sie, ob die hinterlegte 23-8027"
+privacy_filter_onnx_int8,1231,PRIVATE_URL,1068,1077,1070 Graz,overlaps_other_reference_label,"CITY, ZIPCODE","eprägt ist.
+
+Herzliche Grüße,
+Professorin Ünzile Ballif
+Leiterin Personalentwicklung
+1070 Graz Geidorf"
+privacy_filter_onnx_int8,1338,SECRET,100,105,JEHY6,overlaps_other_reference_label,DRIVERLICENSENUM,"formular für das Upskilling‑Programm müssen Sie neben Ihrer 10701845 auch Ihre aktuelle 06JEHY6SDV sowie Ihre 8179 901217 angeben, damit wir Ihre Berechtigung zum Treuhandamt prüfen kön"
+privacy_filter_onnx_int8,1619,SECRET,61,70, C5Z5X8GP,overlaps_other_reference_label,DRIVERLICENSENUM,"Bitte senden Sie Ihre Unterlagen, einschließlich 59943857 und C5Z5X8GPUG, an die Finanzabteilung, damit wir die steuerlichen Implikationen (Steuernummer: 68-702"
+privacy_filter_onnx_int8,1659,SECRET,68,69,Z,overlaps_other_reference_label,DRIVERLICENSENUM,"Mentoring‑Sitzungsplan (ausfüllbare Vorlage)
+1. Sitzungs‑ID: ON4MZATZUN
+2. Mentor: Ofz Vinaya Jonina Langenbach
+3. Mentee: Doktorin Astha Pjevac – Geburtsdatum"
+privacy_filter_onnx_int8,1700,SECRET,406,421,036220880135320,overlaps_other_reference_label,CREDITCARDNUMBER,"@protonmail.com abgerufen werden. Bitte beachten Sie, dass die Zugangsdaten (Passwort: 3110362208801353202) sicher verwahrt werden müssen. Für Rückfragen kontaktieren Sie bitte Bgm Shkeljzen Bhuk"
+privacy_filter_onnx_int8,1830,SECRET,215,225,1AK5Z8HE6R,overlaps_other_reference_label,DRIVERLICENSENUM,"Malengila Binner (Alter 77), erheblich erschwert. Experten empfehlen, die Impfpassnummer (1AK5Z8HE6R) zu überprüfen und ggf. die aktuelle Impfempfehlung zu befolgen. Betroffene sollten ihre "
+privacy_filter_onnx_int8,2108,SECRET,489,507,318440624120331619,overlaps_other_reference_label,CREDITCARDNUMBER, bequem per Post an die Adresse 6020 Wien senden oder persönlich im Lesesaal mit dem Code 3184406241203316196 vorlegen.
+privacy_filter_onnx_int8,2172,PRIVATE_URL,26,45,mailto:LS@yahoo.com,overlaps_other_reference_label,EMAIL,"Hr Vytis Antonios Céréda (mailto:LS@yahoo.com):
+Betreff: Koordination des multidisziplinären Therapieteams
+
+Liebe Kolleg*innen,
+bitte b"
+privacy_filter_onnx_int8,2216,SECRET,280,288,FSXDD9FF,overlaps_other_reference_label,DRIVERLICENSENUM,"feiler sind. In einer Fallstudie wird beschrieben, wie ein Projektleiter mithilfe seiner 2FSXDD9FF7 und des zugehörigen Fahrzeugs (Kennzeichen: XYZ‑123) regelmäßig zu Kunden vor Ort fuhr, "
+privacy_filter_onnx_int8,2392,PRIVATE_URL,410,439, www.gemeinde.at/buergerforum,url_like_without_reference,,"e melde ich mich für ein Bürgerforum an? Füllen Sie das Online‑Formular aus, das Sie unter www.gemeinde.at/buergerforum finden, oder senden Sie Ihre Daten per E‑Mail an die oben genannte Adresse.
+3. Welche Unt"
+privacy_filter_onnx_int8,2463,SECRET,137,140,5VV,overlaps_other_reference_label,DRIVERLICENSENUM,"ng in DeFi, NFTs und Blockchain‑Entwicklung; wenn Sie 75 Jahre alt sind und über einen RGE5VVRTLH verfügen, senden Sie bitte Ihren Lebenslauf an 16P@aol.com. Wir berücksichtigen dabei"
+privacy_filter_onnx_int8,2478,SECRET,288,290,LC,overlaps_other_reference_label,DRIVERLICENSENUM,"‑Einrichtung geeignet sind, und senden Sie uns eine Kopie Ihres 22473506 sowie Ihrer CQZHFLCFNB zu. Für steuerliche Zwecke benötigen wir zudem Ihre 55-3865064 und die aktuelle 385800"
+privacy_filter_onnx_int8,2824,SECRET,223,226,7V8,overlaps_other_reference_label,DRIVERLICENSENUM,"reinberg festgestellt. Bitte prüfen Sie, ob zusätzliche Sicherheitskräfte mit gültigem JAK7V8TSSC und vor Ort verfügbarem 0110.023 009-3754 erreichbar sind."
+privacy_filter_onnx_int8,2962,SECRET,592,603, ZD72YOIXJX,overlaps_other_reference_label,DRIVERLICENSENUM," persönlichen Daten benötigt, darunter 2002-01-11T00:00:00, 8611 970601 sowie die aktuelle ZD72YOIXJX. Um die Formalitäten abzuschließen, bittet das Schreiben um die Bestätigung der Anschrift"
+privacy_filter_onnx_int8,3118,SECRET,198,200,6K,overlaps_other_reference_label,DRIVERLICENSENUM,"iblich oder Geschlechterqueer.
+Zur Identifikation wird die 8305 750503 zusammen mit der MV6K2QIRSF am ersten Arbeitstag erfasst."
+privacy_filter_onnx_int8,3193,SECRET,576,583, Enosh!,overlaps_other_reference_label,GIVENNAME,"efonisch unter 5436-440 5672. Wir freuen uns auf einen inspirierenden Austausch mit Ihnen, Enosh!"
+privacy_filter_onnx_int8,3230,SECRET,383,385,YO,overlaps_other_reference_label,DRIVERLICENSENUM,"f antwortete Zeynep mit der Bitte, die entsprechenden Unterlagen – nämlich 14006257 und KDYOY9AD7L – zur Verifizierung bis zum Ende der Woche hochzuladen."
+privacy_filter_onnx_int8,3324,SECRET,150,153,348,overlaps_other_reference_label,TAXNUM,"önen VOEST-Brücke 16 in Linz stattfindet. Die Anreise erfolgt per Zug, also prüft eure 22-3480600 und stellt sicher, dass ihr das richtige 6020 für die Unterkunft habt."
+privacy_filter_onnx_int8,3375,SECRET,376,384,JSYXQHNN,overlaps_other_reference_label,DRIVERLICENSENUM,"565998
+Führerschein‑Nummer (falls relevant für Therapien mit Mobilitätseinschränkungen): KJSYXQHNNG
+Sozialversicherungsnummer: 3156 530804
+Steuernummer für Rechnungsstellung: 89-1077933
+Ko"
+privacy_filter_onnx_int8,3765,SECRET,704,706,FN,overlaps_other_reference_label,DRIVERLICENSENUM,"ern Ihnen, dass sämtliche in Ihrer Patientenakte enthaltenen Daten, einschließlich Ihrer WFNFO3AZYG und F8749544, streng nach den HIPAA‑Bestimmungen geschützt werden."
+privacy_filter_onnx_int8,3776,SECRET,308,313,722LH,overlaps_other_reference_label,DRIVERLICENSENUM," Lodengasse 72, 4040 Innsbruck Pradl Pradl
+5. Identifikationsnummer (z. B. 41492042 oder N722LH6HZB)
+6. Steuer‑/Versicherungsnummer: 79-8647267 / 6273 590124
+Bitte senden Sie das ausgef"
+privacy_filter_onnx_int8,3795,SECRET,560,567, AGO7DA,overlaps_other_reference_label,DRIVERLICENSENUM,"ausgefüllt. Bitte beachten Sie, dass wir aus Datenschutz‑ und Sicherheitsgründen auch Ihre AGO7DA9FBE erfassen, um im Notfall schnell reagieren zu können. Die Kosten für den Kurs betragen"
+privacy_filter_onnx_int8,3839,SECRET,219,230, XMIRQ4OX3I,overlaps_other_reference_label,DRIVERLICENSENUM,"logisch): F
+Geschlechtsidentität: Androgyn
+Personalausweis‑Nr.: 49128069
+Führerschein‑Nr.: XMIRQ4OX3I
+Steuer‑Nr.: 58-3010487
+Reisepass‑Nr.: G4316345
+Sozialversicherungs‑Nr.: 7202 750801
+
+Bitt"

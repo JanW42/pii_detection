@@ -3,23 +3,22 @@ Model:                       openai/privacy-filter
 Runtime:                     onnx-int8
 Dataset / split:             ai4privacy/pii-masking-openpii-1m / validation
 Language filter:             de
-Rows / non-empty rows:       23,926 / 23,926
-Rows with scored entities:   22,944
-Matching:                    exact character boundaries + identical mapped entity type
-Micro precision / recall / F1: 2.83% / 10.72% / 4.47%
-Macro F1 (2 types with reference support): 10.39%
+Benchmark entries:           23,926
+Matching:                    overlapping privacy_mask span + identical model class
+Model classes:               ACCOUNT_NUMBER, PRIVATE_ADDRESS, PRIVATE_DATE, PRIVATE_EMAIL, PRIVATE_PERSON, PRIVATE_PHONE, PRIVATE_URL, SECRET
+Micro precision / recall / F1: 90.13% / 84.03% / 86.98%
+Macro F1 (6 classes with reference support): 88.47%
 
-Per entity type (strict):
-entity_type       support      TP      FP      FN   precision    recall        F1
-CREDIT_CARD              0       0  23,410       0      0.00%     0.00%     0.00%
-CRYPTO                   0       0      74       0      0.00%     0.00%     0.00%
-EMAIL_ADDRESS       12,046   2,444   9,656   9,602     20.20%    20.29%    20.24%
-IBAN_CODE                0       0       0       0      0.00%     0.00%     0.00%
-IP_ADDRESS               0       0       0       0      0.00%     0.00%     0.00%
-LOCATION            11,507      81  18,688  11,426      0.43%     0.70%     0.54%
-NRP                      0       0       0       0      0.00%     0.00%     0.00%
-PERSON                   0       0  22,268       0      0.00%     0.00%     0.00%
-PHONE_NUMBER             0       0  12,710       0      0.00%     0.00%     0.00%
+Per model class (class-aware overlap):
+model_class       support      TP      FP      FN  TN (rows)   precision    recall        F1
+ACCOUNT_NUMBER      21,407  18,367   4,611   3,040     10,276     79.93%    85.80%    82.76%
+PRIVATE_ADDRESS     34,529  25,081   1,686   9,448     11,523     93.70%    72.64%    81.84%
+PRIVATE_DATE        19,977  19,765     661     212      8,363     96.76%    98.94%    97.84%
+PRIVATE_EMAIL       12,046  12,024      66      22     12,455     99.45%    99.82%    99.64%
+PRIVATE_PERSON      44,391  34,564   1,997   9,827      7,406     94.54%    77.86%    85.39%
+PRIVATE_PHONE        9,084   9,052   3,591      32     13,383     71.60%    99.65%    83.32%
+PRIVATE_URL              0       0     329       0     23,662      0.00%     0.00%     0.00%
+SECRET                   0       0      74       0     23,860      0.00%     0.00%     0.00%
 
-Unsupported reference labels (not scored): AGE=8305, BUILDINGNUM=10052, CREDITCARDNUMBER=46637, DATE=110670, DRIVERLICENSENUM=36945, GENDER=15507, GIVENNAME=58666, IDCARDNUM=24084, PASSPORTNUM=17722, SEX=7119, SOCIALNUM=31074, STREET=31115, SURNAME=64342, TAXNUM=29340, TELEPHONENUM=67049, TITLE=13503, ZIPCODE=14397
-Unsupported model labels (not scored):     PRIVATE_DATE=145011, PRIVATE_URL=1698
+Unsupported reference entities (not scored): AGE=8304, DRIVERLICENSENUM=4486, GENDER=4696, SEX=3726
+Unsupported model label tokens (not scored):     none
